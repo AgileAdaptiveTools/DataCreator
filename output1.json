@@ -1,0 +1,56 @@
+{
+    "feed": {
+        "title": null,
+        "url": null,
+        "description": null,
+        "items": 2,
+        "records": [
+            {
+                "title": null,
+                "dataType": "EVENT",
+                "ext": {
+                    "xID": "9207",
+                    "lon": "-178.8",
+                    "iconLink": "http://www.usgs.gov/images/quake.png",
+                    "starttime": "2012-11-24T06:00Z",
+                    "parentuuid": "wwf:groupmgr:5",
+                    "label": "Fiji Region (4.9)",
+                    "dataType": "EVENT",
+                    "Severity": "2",
+                    "source": "earthquake.usgs.gov",
+                    "description": "Fiji Region Faultline - 4.9 Magnitude",
+                    "referenceLink": "http://earthquake.usgs.gov/earthquakes/",
+                    "uuid": "wwf:groupmgr7",
+                    "lat": "-21.3"
+                },
+                "starttime": null,
+                "feed": null,
+                "uuid": null,
+                "description": null
+            },
+            {
+                "title": null,
+                "dataType": "EVENT",
+                "ext": {
+                    "xID": "11943",
+                    "lon": "132.6",
+                    "iconLink": "http://www.usgs.gov/images/quake.png",
+                    "starttime": "2012-10-28T06:00Z",
+                    "parentuuid": "wwf:groupmgr:6",
+                    "label": "Masset, Canada (6.3)",
+                    "dataType": "EVENT",
+                    "Severity": "3",
+                    "source": "earthquake.usgs.gov",
+                    "description": "Masset, Canada Faultline - 6.3 Magnitude",
+                    "referenceLink": "http://earthquake.usgs.gov/earthquakes/",
+                    "uuid": "wwf:groupmgr8",
+                    "lat": "52.7"
+                },
+                "starttime": null,
+                "feed": null,
+                "uuid": null,
+                "description": null
+            }
+        ]
+    }
+}

@@ -1,0 +1,54 @@
+{
+    "feed": {
+        "title": null,
+        "url": null,
+        "description": null,
+        "items": 2,
+        "records": [
+            {
+                "title": null,
+                "dataType": "EVENT",
+                "ext": {
+                    "dataType": "EVENT",
+                    "lon": "-178.8",
+                    "starttime": "2012-11-24T06:00Z",
+                    "iconLink": "http://www.usgs.gov/images/quake.png",
+                    "source": "earthquake.usgs.gov",
+                    "description": "Fiji Region Faultline - 4.9 Magnitude",
+                    "label": "Fiji Region (4.9)",
+                    "parentuuid": "wwf:groupmgr:5",
+                    "uuid": "wwf:groupmgr7",
+                    "referenceLink": "http://earthquake.usgs.gov/earthquakes/",
+                    "lat": "-21.3",
+                    "extraValue": "3"
+                },
+                "starttime": null,
+                "feed": null,
+                "uuid": null,
+                "description": null
+            },
+            {
+                "title": null,
+                "dataType": "EVENT",
+                "ext": {
+                    "dataType": "EVENT",
+                    "lon": "132.6",
+                    "starttime": "2012-10-28T06:00Z",
+                    "iconLink": "http://www.usgs.gov/images/quake.png",
+                    "source": "earthquake.usgs.gov",
+                    "description": "Masset, Canada Faultline - 6.3 Magnitude",
+                    "label": "Masset, Canada (6.3)",
+                    "parentuuid": "wwf:groupmgr:6",
+                    "uuid": "wwf:groupmgr8",
+                    "referenceLink": "http://earthquake.usgs.gov/earthquakes/",
+                    "lat": "52.7",
+                    "extraValue": "7"
+                },
+                "starttime": null,
+                "feed": null,
+                "uuid": null,
+                "description": null
+            }
+        ]
+    }
+}
