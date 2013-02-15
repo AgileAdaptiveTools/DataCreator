@@ -59,6 +59,79 @@ function renderCheckbox(value, p, record){
    		return '<input type="checkbox" attribute="'+value+'" id="'+idString+'" name="'+idString+'" onchange="changeDropdown(this);"/>';   	
    	};
  	
+//Each key is a possible type.
+//Each value is an array of items: 
+//   * The zeroth is an internal value. I can't use the human-readable names, because it seems the value attribute of inputs doesn't like spaces
+//   * The first is the human-readable name of the subtype.
+//   * The second is the format specifier for the IDL if it exists, or null otherwise.
+//   * The third is the Normalized DataField name if it exists, null otherwise
+var TYPES = {
+	"String":    [["String", "String", null, null], ["Title", "Title", null, "$title"], ["Description", "Description", null, "$description"]],
+	"Integer":   [["Integer", "Integer", null, null], ["UUID", "UUID", null, "$uuid"]],
+	"Date":      [["ISO8601", "ISO8601", "ISO8601", null], ["StartTimeISO8601", "StartTime (ISO8601)", "ISO8601", "$startTime"]], 
+	"LatLonAlt": [["WGS84Lat", "WGS84: Latitude", "WGS84_Map", "$lat"], ["WGS84Lon", "WGS84: Longitude", "WGS84_Map", "$lon"]],
+}	
+
+function fetchFormat (typesSubarray, firstItem){
+	for (i=0; i<typesSubarray.length; i++){
+		if (typesSubarray[i][0] == firstItem){
+			return typesSubarray[i];
+		}	
+	}
+	console.log("WARNING: fetchFormat failed to find subarray! Looking for ", firstItem, " in ", typesSubarray);
+	return null;
+}
+
+/*
+for (key in TYPES){
+	console.log(key, TYPES[key]);
+}
+*/
+console.log(TYPES["String"]);
+
+function generateOptionsFromType(subtypeArray){
+	var returnString = "";
+	for(i in subtypeArray){
+		var displayName = subtypeArray[i][1];
+		/*
+		var valueName; 
+		if (subtypeArray[i][2] == null){
+			valueName = displayName;
+		}
+		else {
+			valueName = subtypeArray[i][2]
+		}
+		*/
+		valueName = subtypeArray[i][0];
+		returnString += '<option value='+valueName+'>'+displayName+'</option>'
+	}
+	console.log("Generated options string: ", returnString);
+	return returnString;
+}
+
+function generateOptionsArray(TYPES){
+	optionsArray = [];
+	for(key in TYPES){
+		optionsArray.push(generateOptionsFromType(TYPES[key]));
+	}
+	return optionsArray;
+}
+
+//stringOptions = generateOptionsFromType(TYPES["String"])
+//Options = generateOptionsFromType(TYPES["String"])
+//Options = generateOptionsFromType(TYPES["String"])
+//Options = generateOptionsFromType(TYPES["String"])
+//console.log(stringOptions);
+
+optionsArray = generateOptionsArray(TYPES);
+//console.log(optionsArray);
+
+var typeOptions = '<option value="String" selected="selected">String</option>\
+					<option value="Integer">Integer</option>\
+					<option value="Date">Date</option>\
+					<option value="LatLonAlt">LatLonAlt</option>'
+
+/* 	
 var typeOptions = '<option value="String" selected="selected">Text</option>\
 					<option value="Numeric">Numeric</option>\
 					<option value="Location">Location</option>\
@@ -98,11 +171,11 @@ var typeOptions = '<option value="String" selected="selected">Text</option>\
  
  var datetimeOptions = '<option value="DDHHMM(Z)MONYY">DDHHMM(Z)MONYY</option>\
 						<option value="YYYY-MM-DDTHH:MM(Z)">YYYY-MM-DDTHH:MM(Z)</option>'
- 
+
+ var SUBTYPES  = ["Location", "Date", "Time", "DateTime"];
+ */
  
  	
-var SUBTYPES = ["Location", "Date", "Time", "DateTime"];
-
 function fetchSubtypeFromTypeDropDown(dropdown){
 	var chosen_subtype = dropdown.value;
 	
@@ -111,8 +184,8 @@ function fetchSubtypeFromTypeDropDown(dropdown){
 	var subtype;
 	var subdropdown;
 	var match;
-	for (var i=0; i<SUBTYPES.length; i++){
-		subtype = SUBTYPES[i];
+	for (subtype in TYPES) { //iterates over keys
+		//subtype = key;
 		subdropdown = Ext.get(idHeader+subtype+idFooter);
 		match = (chosen_subtype == subtype);
 		if (match) {
@@ -146,8 +219,8 @@ function changeSubtype(dropdown){
 	var subtype;
 	var subdropdown;
 	var match;
-	for (var i=0; i<SUBTYPES.length; i++){
-		subtype = SUBTYPES[i];
+	for (subtype in TYPES){ //iterates over keys
+		//subtype = key;
 		subdropdown = Ext.get(idHeader+subtype+idFooter);
 		match = (chosen_subtype == subtype);
 		//console.log("Currently working on: ", subtype, "matches value? ", match);
@@ -199,13 +272,21 @@ function renderDropdown(value, p, record){
 function renderSubtype(value, p, record){
    		var idHeader = record.data.source+"-subtype-";
    		var idFooter = record.id;
-   		//var textDD;
+   		/*//var textDD;
    		//var numericDD;
    		var locationDD = '<select style="display: none" attribute="'+value+'" id="'+idHeader+'Location-'+idFooter+'" name="'+value+'" disabled="disabled">'+locationOptions+'</select>';
    		var dateDD = '<select style="display: none" attribute="'+value+'" id="'+idHeader+'Date-'+idFooter+'" name="'+value+'" disabled="disabled">'+dateOptions+'</select>';
    		var timeDD = '<select style="display: none" attribute="'+value+'" id="'+idHeader+'Time-'+idFooter+'" name="'+value+'" disabled="disabled">'+timeOptions+'</select>';
    		var datetimeDD = '<select style="display: none" attribute="'+value+'" id="'+idHeader+'DateTime-'+idFooter+'" name="'+value+'" disabled="disabled">'+datetimeOptions+'</select>';
    		return locationDD + dateDD + timeDD + datetimeDD;
+   		*/
+   		returnString = "";
+   		for (key in TYPES){
+   			options = generateOptionsFromType(TYPES[key]);
+   			returnString += ('<select style="display: none" attribute="'+value+'" id="'+idHeader+key+'-'+idFooter+'" name="'+value+'" disabled="disabled">'+options+'</select>');
+   		}
+   		return returnString;
+
    	};
    	
    
@@ -588,19 +669,46 @@ var executeStep = function(stepNumber){
 					
 					dropdown = fetchDropdownFromCheckbox(checkbox);
 					subdropdown = fetchSubtypeFromTypeDropDown(dropdown);
-					console.log("Found subdropdown (or didn't): ", subdropdown);
+					console.log("Found subdropdown: ", subdropdown);
+					
+					console.log("dropdown.value = ", dropdown.value);
+					console.log("subdropdown.value = ", subdropdown.dom.value);
+					console.log("TYPES subarray is: ", TYPES[dropdown.value]);
+					
+					format = fetchFormat(TYPES[dropdown.value], subdropdown.dom.value);  
+					
+					
+					var output_name;
+					if (format[3] == null){ //format[3] is the normalized name.
+						output_name = type.name; //if it doesn't exist, use the original field name
+					}
+					else{
+						output_name = format[3]; //if it does, use it
+					}
+					
+					if(format[2] == null) {	//format[2] is the format option
+						idlJSON.dslv[type.name] = [dropdown.value, output_name]; //if it doesn't exist, skip it
+					}
+					else {
+						idlJSON.dslv[type.name] = [dropdown.value, format[2], output_name]; //if it does, use it
+					} 
+					
+					/*
 					if (subdropdown) {
 						idlJSON.dslv[type.name] = [type.value, "$"+type.name, subdropdown.dom.value];
 					}
 					else {
 						idlJSON.dslv[type.name] = [type.value, "$"+type.name];
 					}
+					*/
 				}
 			}
 		console.log("idl: ", idlJSON);
 		
 		var idlURL = DOMAIN + "/DataEngine/" + IDL; //+ "/31?_method=PUT" ; //this is what a put request would look like
+		//var idlURL = DOMAIN + "/DataEngine/" + IDL + "/"+source+"?_method=PUT" ; //this is what a put request would look like
 	
+		
 		console.log("Sending request to ", idlURL);	
 		Ext.Ajax.request({
 		   method: "POST",		   
