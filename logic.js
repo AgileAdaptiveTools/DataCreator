@@ -1,3 +1,5 @@
+// PATH Variables -- used to build references to the Slurper server
+
 //var DOMAIN = "https://localhost:8443";
 //var ROOT = "/datacreator";
 			
@@ -12,6 +14,8 @@ var IDL = "idl";
 
 var test_var = "hello world";
 
+//creates a new object with all the attributes/values of two objects
+//if there is overlap, obj2's value will take precedent. Used to preview a merge.
 function merge_objects(obj1,obj2){
     var obj3 = {};
     for (var attrname in obj1) { obj3[attrname] = obj1[attrname]; }
@@ -23,6 +27,7 @@ function merge_objects(obj1,obj2){
 //var test_obj2 = {att3: "bonjour", att4: "monde"};
 //var test_obj3 = merge_objects(test_obj1, test_obj2);
 
+//various global variables that should really be kept in a SourceManager class
 var chosen_attributes1 = [];
 var chosen_attributes2 = [];
 var linkedAttributes = [];
@@ -30,6 +35,10 @@ var linkedAttributes = [];
 var attributeStore1 = [];
 var attributeStore2 = [];
 
+var sourceURL1 = "";
+var sourceURL2 = "";
+
+//takes a checkbox and returns the associated dropdown
 function fetchDropdownFromCheckbox(checkbox){
 	//WARNING: WILL FAIL IF RECORD IS NOT TWO DIGITS
 	//IMPROVEMENT: FIND THIRD-FROM-LAST '-' CHARACTER IN STRING AND SLICE FROM THERE
@@ -40,6 +49,7 @@ function fetchDropdownFromCheckbox(checkbox){
 	return dropDown;
 }
 
+//called when a checkbox changes -- makes the associated type dropdown active or inactive
 function changeDropdown(checkbox){
 	//WARNING: WILL FAIL IF RECORD IS NOT TWO DIGITS
 	//IMPROVEMENT: FIND THIRD-FROM-LAST '-' CHARACTER IN STRING AND SLICE FROM THERE
@@ -54,14 +64,15 @@ function changeDropdown(checkbox){
 	}
 }
 
+//builds a checkbox
 function renderCheckbox(value, p, record){
    		var idString = record.data.source+"-checkbox-"+record.id;
    		return '<input type="checkbox" attribute="'+value+'" id="'+idString+'" name="'+idString+'" onchange="changeDropdown(this);"/>';   	
    	};
  	
 //Each key is a possible type.
-//Each value is an array of items: 
-//   * The zeroth is an internal value. I can't use the human-readable names, because it seems the value attribute of inputs doesn't like spaces
+//Each value is an array of arrays. Each array specifies a subtype, with the values being equal to: 
+//   * The zeroth is a format specifier, an internal value. I can't use the human-readable names, because it seems the value attribute of inputs doesn't like spaces
 //   * The first is the human-readable name of the subtype.
 //   * The second is the format specifier for the IDL if it exists, or null otherwise.
 //   * The third is the Normalized DataField name if it exists, null otherwise
@@ -72,6 +83,7 @@ var TYPES = {
 	"LatLonAlt": [["WGS84Lat", "WGS84: Latitude", "WGS84_Map", "$lat"], ["WGS84Lon", "WGS84: Longitude", "WGS84_Map", "$lon"]],
 }	
 
+//given a format specifier (see above), returns the appropriate subtype array
 function fetchFormat (typesSubarray, firstItem){
 	for (i=0; i<typesSubarray.length; i++){
 		if (typesSubarray[i][0] == firstItem){
@@ -82,13 +94,7 @@ function fetchFormat (typesSubarray, firstItem){
 	return null;
 }
 
-/*
-for (key in TYPES){
-	console.log(key, TYPES[key]);
-}
-*/
-console.log(TYPES["String"]);
-
+//given a subtype array, builds the options for a combobox based on that type
 function generateOptionsFromType(subtypeArray){
 	var returnString = "";
 	for(i in subtypeArray){
@@ -109,6 +115,8 @@ function generateOptionsFromType(subtypeArray){
 	return returnString;
 }
 
+//generates an array based on the keys of the TYPES dictionary
+//used whereever enumeration over the possible types is necessary
 function generateOptionsArray(TYPES){
 	optionsArray = [];
 	for(key in TYPES){
@@ -126,56 +134,14 @@ function generateOptionsArray(TYPES){
 optionsArray = generateOptionsArray(TYPES);
 //console.log(optionsArray);
 
+//the dropdown for Type. Should be generated from optionsArray instead of hardcoded.
 var typeOptions = '<option value="String" selected="selected">String</option>\
 					<option value="Integer">Integer</option>\
 					<option value="Date">Date</option>\
 					<option value="LatLonAlt">LatLonAlt</option>'
+ 
 
-/* 	
-var typeOptions = '<option value="String" selected="selected">Text</option>\
-					<option value="Numeric">Numeric</option>\
-					<option value="Location">Location</option>\
-					<option value="Date">Date</option>\
-					<option value="Time">Time</option>\
-					<option value="DateTime">Date/Time</option>'
- 	
- //var textOptions     = '<option value="Text">Text</option>'\
- //						'<option value="$title">Title</option>'
- 
- //var numericOptions  = '<option value="Integer">Integer</option>'\
- //					   '<option value="$uuid">UUID</option>'
- 						
- 
- var locationOptions = '<option value="LatLonAlt" selected="selected">Lat/Lon/Alt</option>\
-						<option value="LonLatAlt">Lon/Lat/Alt</option>\
-						<option value="Lat">Latitude</option>\
-						<option value="Lon">Longitude</option>\
-						<option value="MGRS">MGRS</option>\
-						<option value="UTM">UTM</option>'
- 
- var dateOptions     = '<option value="MM/DD" selected="selected">MM/DD</option>\
-						<option value="MM/DD/YY">MM/DD/YY</option>\
-						<option value="MM/DD/YYYY">MM/DD/YYYY</option>\
-						<option value="DD/MM/YY">DD/MM/YY</option>\
-						<option value="DD/MM/YYYY">DD/MM/YYYY</option>\
-						<option value="DD mon yy">DD Month YY</option>\
-						<option value="DD mon yyyy">DD Month YYYY</option>\
-						<option value="ddmonyy">DDMonthYY</option>\
-						<option value="ddmonyyyy">DDMonthYYYY</option>'
- 
- var timeOptions     = '<option value="HH:mm:ss" selected="selected">HH:mm:ss</option>\
-						<option value="HH:mm">HH:mm</option>\
-						<option value="HHmmss">HHmmss</option>\
-						<option value="HHmm">HHmm</option>\
-						<option value="Nnnnnnnnnnnnnnnnnn">Nnnnnnnnnnnnnnnnnn</option>'
- 
- var datetimeOptions = '<option value="DDHHMM(Z)MONYY">DDHHMM(Z)MONYY</option>\
-						<option value="YYYY-MM-DDTHH:MM(Z)">YYYY-MM-DDTHH:MM(Z)</option>'
-
- var SUBTYPES  = ["Location", "Date", "Time", "DateTime"];
- */
- 
- 	
+// 	given a dropdown, fetch the associated subtype dropdown
 function fetchSubtypeFromTypeDropDown(dropdown){
 	var chosen_subtype = dropdown.value;
 	
@@ -196,6 +162,7 @@ function fetchSubtypeFromTypeDropDown(dropdown){
 	return false;
 }
 
+//called whenever a type dropdown changes -- makes the appropriate subtype dropdown visible
 function changeSubtype(dropdown){
 	var chosen_subtype = dropdown.value;
 	
@@ -263,7 +230,8 @@ function changeSubtype(dropdown){
 	*/
 	return;
 } 	
- 	
+ 
+ //render functions for grids	
 function renderDropdown(value, p, record){
    		var idString = record.data.source+"-type-" + record.id;
    		return '<select attribute="'+value+'" id="'+idString+'" name="'+value+'" onchange="changeSubtype(this);" disabled="disabled">'+typeOptions+'</select>';
@@ -272,14 +240,6 @@ function renderDropdown(value, p, record){
 function renderSubtype(value, p, record){
    		var idHeader = record.data.source+"-subtype-";
    		var idFooter = record.id;
-   		/*//var textDD;
-   		//var numericDD;
-   		var locationDD = '<select style="display: none" attribute="'+value+'" id="'+idHeader+'Location-'+idFooter+'" name="'+value+'" disabled="disabled">'+locationOptions+'</select>';
-   		var dateDD = '<select style="display: none" attribute="'+value+'" id="'+idHeader+'Date-'+idFooter+'" name="'+value+'" disabled="disabled">'+dateOptions+'</select>';
-   		var timeDD = '<select style="display: none" attribute="'+value+'" id="'+idHeader+'Time-'+idFooter+'" name="'+value+'" disabled="disabled">'+timeOptions+'</select>';
-   		var datetimeDD = '<select style="display: none" attribute="'+value+'" id="'+idHeader+'DateTime-'+idFooter+'" name="'+value+'" disabled="disabled">'+datetimeOptions+'</select>';
-   		return locationDD + dateDD + timeDD + datetimeDD;
-   		*/
    		returnString = "";
    		for (key in TYPES){
    			options = generateOptionsFromType(TYPES[key]);
@@ -289,8 +249,7 @@ function renderSubtype(value, p, record){
 
    	};
    	
-   
-
+//generates the "Add" button for a Source Panel
 var generateSourceAddButtonPanel = function(sourceNum){
 	var button = generateSourceAddButton(sourceNum);
 	var panel = Ext.create('Ext.Panel', {
@@ -335,13 +294,20 @@ var generateSourceAddButton = function(sourceNum){
 	return button;
 };
 
-
+//called when the Add button is clicked
 var executeAddButton = function(sourceNum){
 	var urlInput = Ext.getCmp("urlInput"+sourceNum);
+	
 	//console.log("getting value: ", urlInput.value);
 	if (urlInput.value){
 		//console.log("Found URL, proceeding");
 		var urlValue =  urlInput.value;
+		if (sourceNum == 1){
+			sourceURL1 = urlValue;
+		}
+		else {
+			sourceURL2 = urlValue;
+		}
 		if (urlValue == "data"+sourceNum+".csv" || urlValue == "undefined") {
 			urlInput = DOMAIN+"/DataEngine/csvSlurper?url="+DOMAIN+ROOT+"/data"+sourceNum+".csv";
 		}
@@ -491,9 +457,12 @@ var executeAddButton = function(sourceNum){
 	}
 };
 
-
+//called whenever the "next" button is clicked
+//handles UI setup, remote calls and data storage
 var executeStep = function(stepNumber){
 	console.log("executeStep called with number: ", stepNumber);
+	//Step #1 and Step #3 involve preparing the Attribute Selection grid after a source have been chosen.
+	//It needs to set up both the Attribute Selection Panel and the Source Preview panel.
 	if (stepNumber == 1 || stepNumber == 3){
 		//console.log("Parsing data source");
 		var card_items = []
@@ -638,14 +607,18 @@ var executeStep = function(stepNumber){
 		 
 		 
 	}
+	//Steps #2 and #4 are after the user has finished with an Attribute Selection screen. 
+	//It stores their specification, generates the IDL and sends it off.
 	else if (stepNumber == 2 || stepNumber == 4){
 		if (stepNumber == 2){
 			var source = 1;
 			var chosen_attributes = chosen_attributes1;
+			var source_uri = sourceURL1;
 		}
 		else {
 			var source = 2;
 			var chosen_attributes = chosen_attributes2;
+			var source_uri = sourceURL2;
 		}
 		//console.log("Storing selected fields and field types");
 		var checkboxList = Ext.query('*[id^='+source+'-checkbox]');
@@ -653,7 +626,7 @@ var executeStep = function(stepNumber){
 		//console.log("Found checkboxes: ", checkboxList.length);
 		//console.log("Found types: ", typeList.length);
 		
-		var idlJSON = prepareIDLjson(); 
+		var idlJSON = prepareIDLjson(source_uri); 
 		var dropdown;
 		var subdropdown;
 		
@@ -868,7 +841,7 @@ var executeStep = function(stepNumber){
 	}
 }
 
-function prepareIDLjson() {
+function prepareIDLjson(source_uri) {
 	var idlJSON = new Object;
 	
 	idlJSON.version = "Ingest Description Language (IDL) v1.1212.27";
@@ -881,7 +854,7 @@ function prepareIDLjson() {
 	idlJSON.modificationDate = "2013-01-08T06:00:02Z";
 	idlJSON.source = "source placeholder";
 	idlJSON.source_format = "source_format placeholder";
-	idlJSON.source_uri = "source uri placeholder";
+	idlJSON.source_uri = source_uri;
 	idlJSON.description = "description placeholder";
 
 	idlJSON.dslv = new Object;
@@ -1303,6 +1276,7 @@ function generatePickerPanel(){
 		items: [merge_preview_panel1, merge_preview_panel2],
 	});
 	
+	//DEMO STUFF -- will be replaced
 	//var percent1 = Math.ceil((100 * linkedAttributes.length) / (100 * global_keys1.length) * global_store.getCount());
 	//var percent2 = Math.ceil((100 * linkedAttributes.length) / (100 * global_keys2.length) * global_store2.getCount());
 	

@@ -566,4 +566,5 @@ Ext.application({
     }
 });
 
-console.log(test_var);
+var source = new SourceManager('www.google.com', true);
+source.display(); 
