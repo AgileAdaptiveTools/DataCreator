@@ -38,6 +38,11 @@ var attributeStore2 = [];
 var sourceURL1 = "";
 var sourceURL2 = "";
 
+var furthestStep = 0;
+
+var linked = false;
+
+//OLD
 //takes a checkbox and returns the associated dropdown
 function fetchDropdownFromCheckbox(checkbox){
 	//WARNING: WILL FAIL IF RECORD IS NOT TWO DIGITS
@@ -49,6 +54,17 @@ function fetchDropdownFromCheckbox(checkbox){
 	return dropDown;
 }
 
+function fetchDropdownFromCheckboxById(checkboxID){
+	//WARNING: WILL FAIL IF RECORD IS NOT TWO DIGITS
+	//IMPROVEMENT: FIND THIRD-FROM-LAST '-' CHARACTER IN STRING AND SLICE FROM THERE
+	var dropDownID = checkboxID.slice(0, 2) + "type" + checkboxID.slice(10)
+	//var dropDown = Ext.getCmp(dropDownID);
+	var dropDown = document.getElementById(dropDownID);
+	console.log("Using ", checkboxID, " found ", dropDown);
+	return dropDown;
+}
+
+//OLD
 //called when a checkbox changes -- makes the associated type dropdown active or inactive
 function changeDropdown(checkbox){
 	//WARNING: WILL FAIL IF RECORD IS NOT TWO DIGITS
@@ -64,6 +80,22 @@ function changeDropdown(checkbox){
 	}
 }
 
+//called when a checkbox changes -- makes the associated type dropdown active or inactive
+function changeDropdownById(checkboxID, checked){
+	//WARNING: WILL FAIL IF RECORD IS NOT TWO DIGITS
+	//IMPROVEMENT: FIND THIRD-FROM-LAST '-' CHARACTER IN STRING AND SLICE FROM THERE
+	var dropDownID = checkboxID.slice(0, 2) + "type" + checkboxID.slice(10)
+	//var dropDown = Ext.getCmp(dropDownID);
+	var dropDown = document.getElementById(dropDownID);
+	if (checked) {
+		dropDown.disabled = false;
+	}
+	else {
+		dropDown.disabled = "disabled";
+	}
+}
+
+//OLD
 //builds a checkbox
 function renderCheckbox(value, p, record){
    		var idString = record.data.source+"-checkbox-"+record.id;
@@ -135,7 +167,8 @@ optionsArray = generateOptionsArray(TYPES);
 //console.log(optionsArray);
 
 //the dropdown for Type. Should be generated from optionsArray instead of hardcoded.
-var typeOptions = '<option value="String" selected="selected">String</option>\
+var typeOptions = '<option value="" selected="selected"></option>\
+					<option value="String">String</option>\
 					<option value="Integer">Integer</option>\
 					<option value="Date">Date</option>\
 					<option value="LatLonAlt">LatLonAlt</option>'
@@ -249,26 +282,7 @@ function renderSubtype(value, p, record){
 
    	};
    	
-//generates the "Add" button for a Source Panel
-var generateSourceAddButtonPanel = function(sourceNum){
-	var button = generateSourceAddButton(sourceNum);
-	var panel = Ext.create('Ext.Panel', {
-		layout: {
-			type: 'hbox',
-			align: 'stretch',
-		},
-		height: 25, 
-		border: false,
-		defaults: { border: false,},
-		items: [
-			{html:"", flex:1},
-			button,
-			{html:"", flex:1},
-		],
-	});
-	return panel;
-}
-
+//markup for the Merge Preview
 var percentMarkup = [
    		"<div class='continuePanel'>",
    		'{fieldsJoined} field{s} joined.<br/><br/>',
@@ -280,189 +294,13 @@ var percentMarkup = [
    	];
 var percentTemplate = Ext.create('Ext.Template', percentMarkup);
 
-var generateSourceAddButton = function(sourceNum){
-	var button = Ext.create('Ext.button.Button', {
-		id: 'source_add_button'+sourceNum,
-		class: 'add_button',
-		text: 'Add',
-		//height: 20,
-		width: 50,
-		handler: function(){ 
-			executeAddButton(sourceNum);
-		},
-	});
-	return button;
-};
-
-//called when the Add button is clicked
-var executeAddButton = function(sourceNum){
-	var urlInput = Ext.getCmp("urlInput"+sourceNum);
-	
-	//console.log("getting value: ", urlInput.value);
-	if (urlInput.value){
-		//console.log("Found URL, proceeding");
-		var urlValue =  urlInput.value;
-		if (sourceNum == 1){
-			sourceURL1 = urlValue;
-		}
-		else {
-			sourceURL2 = urlValue;
-		}
-		if (urlValue == "data"+sourceNum+".csv" || urlValue == "undefined") {
-			urlInput = DOMAIN+"/DataEngine/csvSlurper?url="+DOMAIN+ROOT+"/data"+sourceNum+".csv";
-		}
-		else {
-			if (urlValue.slice(-3) == "csv"){
-				urlInput = DOMAIN+"/DataEngine/"+CSVSLURPER+"?url="+urlValue;
-			}
-			else{
-				urlInput = DOMAIN+"/DataEngine/"+JSONSLURPER+"?url="+urlValue;
-			}
-		}
-		//console.log("Preparing request: " + urlInput);
-		Ext.Ajax.request({
-		   method: "GET",
-		   url: urlInput, 
-		   //success: slurperPass,   
-		   //failure: slurperFail,
-		   //jsonData: { foo: 'bar' }  // your json data
-		   params: { format: 'json' },
-		   callback: function(original, successBool, response){
-				//console.log("ResponseText: ", response.responseText);
-				var jsonResponse = JSON.parse(response.responseText);
-				//console.log(jsonResponse);
-				
-				var keys = Object.keys(jsonResponse.feed.records[0].ext);
-				if (sourceNum == 1){
-					global_keys1 = keys;
-				}
-				else {
-					global_keys2 = keys;
-				}
-				//console.log("Data"+sourceNum+"'s keys: ", keys);
-				Ext.define("Data"+sourceNum,{
-					extend: 'Ext.data.Model',
-					fields: keys,
-				});
-							
-				//console.log("Data"+sourceNum+"'s data: ", jsonResponse);				
-				var new_store = Ext.create('Ext.data.Store', {
-					id: "data_store"+sourceNum+"",
-					model: "Data"+sourceNum,
-					autoLoad: true,
-					data: jsonResponse.feed,
-					proxy: {
-						type: 'memory',
-						reader: {
-							type: 'json',
-							root: 'records',
-							record: 'ext',
-						}
-					}
-				});
-				
-				new_store.load({
-					callback: function(records, operation, success) {
-					//console.log("Objects in store: ", new_store.getCount());
-					if(success){
-						//console.log("Source "+sourceNum+": Success!");
-						//console.log("Records: ", records);
-						//console.log("Name: ", jsonResponse.title); 
-						var title = jsonResponse.title;
-						if (title == null){
-							title = "Source "+sourceNum;
-						}
-						var type = jsonResponse.description;
-						if (type == null){
-							type = "Undefined";
-						}
-						if (sourceNum == 1){
-							global_store = new_store;
-						}
-						else {
-							global_store2 = new_store;
-						}
-						var msg = sourceTemplate.applyTemplate({name: title, type: type, url: urlValue, dataRecords: new_store.getCount(), dataFields: keys.length, num: sourceNum});
-						Ext.Msg.show({
-							title: 'Source Request Succeeded',
-							msg: msg,
-							buttons: Ext.Msg.OK,
-						});
-						//sourceTemplate.overwrite("continue"+sourceNum, {name: title, type: type, url: urlValue, dataRecords: new_store.getCount(), dataFields: keys.length, num: sourceNum});
-						//continueButton1.render('continueButton1');
-						Ext.getCmp("main_next").setDisabled(false);
-						//Ext.getCmp("urlButton"+sourceNum).setDisabled(true);
-					}	
-					else{
-						//console.log("Source "+sourceNum+": Failure.");
-						failureTemplate.overwrite("continue"+sourceNum);
-					}
-				}});
-				
-			}
-		});	
-		return;
-	}
-	else {
-		//console.log("No URL, trying file:");
-		var fileInput = Ext.getCmp("inputFile"+sourceNum);
-		if (fileInput.value){
-			var form = Ext.getCmp('fileForm'+sourceNum).getForm();
-			//console.log("Using form: ", form)
-			/*
-			Ext.Ajax.request({
-					form: form,
-					url: DOMAIN+"/DataEngine/csvSlurper",
-					method: 'POST',
-					isUpload: true,
-				    params: { format: 'json' },
-				    callback: function(original, successBool, response){
-						//console.log("ResponseText: ", response.responseText);
-					}
-				});
-			*/
-			
-			if (fileInput.value.slice(-3) == "csv"){
-				url = DOMAIN+"/DataEngine/"+CSVSLURPER; //+"?url="+urlValue;
-			}
-			else{
-				url = DOMAIN+"/DataEngine/"+JSONSLURPER; //+"?url="+urlValue;
-			}
-			
-			if(form.isValid()){
-				form.submit({
-					method: "POST",
-					url: url,
-					params: {format:'json'}, //force_mime_type: "text/plain"},  
-					//force_mime_type: "text/plain",
-					waitMsg: 'Uploading your file...',
-					success: function(fp, o) {
-						msg('Success', 'Processed file "' + o.result.file + '" on the server');
-					},
-					failure: function (form, o) {
-						console.log("Failure with o = ", o);
-						Ext.Msg.show({
-							title: 'Add Request Failed',
-							msg: o.result.error,
-							buttons: Ext.Msg.OK,
-							icon: Ext.Msg.ERROR
-						});
-					}
-				});
-			}
-		}
-		else{
-			//console.log("No file found, either. Giving up.");
-		}
-	}
-};
-
 //called whenever the "next" button is clicked
 //handles UI setup, remote calls and data storage
 var executeStep = function(stepNumber){
 	console.log("executeStep called with number: ", stepNumber);
 	//Step #1 and Step #3 involve preparing the Attribute Selection grid after a source have been chosen.
 	//It needs to set up both the Attribute Selection Panel and the Source Preview panel.
+	furthestStep = stepNumber;
 	if (stepNumber == 1 || stepNumber == 3){
 		//console.log("Parsing data source");
 		var card_items = []
@@ -509,6 +347,7 @@ var executeStep = function(stepNumber){
 			 //index = idx;
 		});		
 		
+		//the panel that displays the data source's data
 		var preview_panel = Ext.create('Ext.Panel', {
 			id: "preview_panel" + num,
 			layout: 'card',
@@ -517,7 +356,7 @@ var executeStep = function(stepNumber){
 			flex: 1,
 			activeItem: 0,
 			items: card_items,
-			bbar: [
+			tbar: [
 				'->',
 				{
 					id: 'move-prev'+num,
@@ -543,18 +382,40 @@ var executeStep = function(stepNumber){
 				data: formatted_keys,
 		});
 		//console.log("temp store = ", temp_store.data.items);
-		var picker_grid = Ext.create('Ext.grid.Panel', {
+		var checkboxModel = Ext.create('Ext.selection.CheckboxModel', {
+			checkOnly: true,
+			listeners: {
+				deselect: function(model, record, index) {
+					//id = record.get('id');
+					//alert(id);
+					var idString = record.data.source+"-checkbox-"+record.id;
+					changeDropdownById(idString, false);
+				},
+				select: function(model, record, index) {
+					//id = record.get('id');
+					//alert(id);
+					var idString = record.data.source+"-checkbox-"+record.id;
+					changeDropdownById(idString, true);
+				}
+			}
+		});
+		
+		//the panel that display the data source's fields
+    	var picker_grid = Ext.create('Ext.grid.Panel', {
 			id: 'picker_grid'+num,
 			store: temp_store,
 			border: true,
 			title: "Field Selection",
 			flex: 1,
+			selModel: checkboxModel,
+	
 			columns: [
-				{text: "", width: 40, dataIndex: 'name', renderer: renderCheckbox, sortable: false},
+				//{text: "", width: 40, dataIndex: 'name', renderer: renderCheckbox, sortable: false},
 				{text: "Attribute", flex: 1, dataIndex: 'name', sortable: false},
 				{text: "Type", flex:1, dataIndex: 'name', renderer: renderDropdown, sortable:false},
 				{text: "Subtype", flex:1, dataIndex: 'name', renderer: renderSubtype, sortable:false},
 			],
+			/*
 			bbar: [
 				{
 					id: 'select-none'+num,
@@ -579,7 +440,8 @@ var executeStep = function(stepNumber){
 					}
 				},
 				'->',
-			],				
+			],	
+			*/			
 		 });
 		 //picker_grid1.doLayout();
 		 
@@ -621,7 +483,10 @@ var executeStep = function(stepNumber){
 			var source_uri = sourceURL2;
 		}
 		//console.log("Storing selected fields and field types");
-		var checkboxList = Ext.query('*[id^='+source+'-checkbox]');
+		//var checkboxList = Ext.query('*[id^='+source+'-checkbox]');
+		var picker_grid = Ext.getCmp('picker_grid'+source);
+		var checkboxList = picker_grid.getSelectionModel().getSelection();
+		
 		var typeList = Ext.query('*[id^='+source+'-type]');
 		//console.log("Found checkboxes: ", checkboxList.length);
 		//console.log("Found types: ", typeList.length);
@@ -630,9 +495,11 @@ var executeStep = function(stepNumber){
 		var dropdown;
 		var subdropdown;
 		
+		//prepare the JSON and send it off
 		for (var i=0;i<checkboxList.length;i++) {
 				var checkbox = checkboxList[i];
-				if (checkbox.checked) {
+				//if (checkbox.checked) {
+				if (true) {
 					var type = typeList[i]; //THIS IS UNSAFE PROBABLY
 					//alternatively, grab the id from the end of the name of the checkbox's id
 					//and find the related element in typeList.
@@ -640,13 +507,14 @@ var executeStep = function(stepNumber){
 					//jsonObject[type.name] = [type.value, type.name];
 					chosen_attributes.push({"attribute": type.name, "value": type.value, "source": source});
 					
-					dropdown = fetchDropdownFromCheckbox(checkbox);
+					checkboxID = source+"-checkbox-"+checkbox.id;
+					dropdown = fetchDropdownFromCheckboxById(checkboxID);
 					subdropdown = fetchSubtypeFromTypeDropDown(dropdown);
 					console.log("Found subdropdown: ", subdropdown);
 					
-					console.log("dropdown.value = ", dropdown.value);
-					console.log("subdropdown.value = ", subdropdown.dom.value);
-					console.log("TYPES subarray is: ", TYPES[dropdown.value]);
+					//console.log("dropdown.value = ", dropdown.value);
+					//console.log("subdropdown.value = ", subdropdown.dom.value);
+					//console.log("TYPES subarray is: ", TYPES[dropdown.value]);
 					
 					format = fetchFormat(TYPES[dropdown.value], subdropdown.dom.value);  
 					
@@ -698,6 +566,7 @@ var executeStep = function(stepNumber){
 		
 		if (stepNumber == 4) {
 		
+			//generates the panel that holds the merge sources UI
 			var merge_grids = generatePickerPanel();
 		
 			merge_panel.add(merge_grids);
@@ -744,11 +613,13 @@ var executeStep = function(stepNumber){
 			});
 			*/
 		}
-		
+	
+		//this condition can be removed if the user MUST do something on the merge page before being allowed to proceed
 		if (stepNumber == 2){
 			Ext.getCmp("main_next").setDisabled(true);
 		}
 	}
+	//occurs after the user has finished the merge sources page. The results are packaged into a PDL and sent off, then the final preview is generated
 	else if (stepNumber == 5){
 		//console.log("Entering step 5");
 		 Ext.getCmp("main_next").setDisabled(true);
@@ -1169,6 +1040,13 @@ function generatePickerPanel(){
 		}
 	});
 	
+	if (linked) {
+		//set bbar, Link column renderer
+	}
+	else {
+		//set bbar, link column renderer
+	}
+	
 	var picker_grid2 = Ext.create('Ext.grid.Panel', {
 		id: 'merge_picker2',
 		store: attributeStore2,
@@ -1262,7 +1140,9 @@ function generatePickerPanel(){
 		flex: 1,
 		border: false,
 		defaults: {border: false},
-		items: [picker_grid1, picker_grid2],
+		items: [picker_grid1, 
+				{html: "", height: 10, border: false},
+				picker_grid2],
 	});
 	
 	var merge_preview_holder = Ext.create('Ext.Panel', {
@@ -1273,7 +1153,9 @@ function generatePickerPanel(){
 		flex: 1,
 		border: false,
 		defaults: {border: false},
-		items: [merge_preview_panel1, merge_preview_panel2],
+		items: [merge_preview_panel1, 
+				{html: "", height: 10, border: false},
+				merge_preview_panel2],
 	});
 	
 	//DEMO STUFF -- will be replaced
@@ -1322,11 +1204,11 @@ function generatePickerPanel(){
 		items: [
 			{html:"", width:30},
 			picker_grid_holder,
+			{html:"", width:10},
 			merge_preview_holder,
-			//{html:"data placeholder", flex:2},
+			{html:"", width:10},
 			merge_report_holder,
 			{html:"", width:30},
-			//preview_panel,
 		],
 
 	});	

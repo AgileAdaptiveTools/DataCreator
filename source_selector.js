@@ -1,3 +1,75 @@
+//generates the "Add" button used as part of the Source Selector
+var generateSourceAddButton = function(sourceNum){
+	var button = Ext.create('Ext.button.Button', {
+		id: 'source_add_button'+sourceNum,
+		class: 'add_button',
+		text: 'Add',
+		//height: 20,
+		width: 50,
+		handler: function(){ 
+			executeAddButton(sourceNum);
+		},
+	});
+	return button;
+};
+
+//generates the "Add" button for a Source Panel
+var generateSourceAddButtonPanel = function(sourceNum){
+	var button = generateSourceAddButton(sourceNum);
+	var panel = Ext.create('Ext.Panel', {
+		id: "add_button_panel"+sourceNum,
+		layout: {
+			type: 'hbox',
+			align: 'stretch',
+		},
+		height: 25, 
+		border: false,
+		defaults: { border: false,},
+		items: [
+			{html:"", flex:1},
+			button,
+			{html:"", flex:1},
+		],
+	});
+	return panel;
+}
+
+var generateSourceRemoveButton = function(sourceNum){
+	var button = Ext.create('Ext.button.Button', {
+		id: 'source_remove_button'+sourceNum,
+		class: 'remove_button',
+		text: 'Remove',
+		//height: 20,
+		width: 50,
+		handler: function(){ 
+			executeRemoveButton(sourceNum);
+		},
+	});
+	return button;
+};
+
+//generates the "Add" button for a Source Panel
+var generateSourceRemoveButtonPanel = function(sourceNum){
+	var button = generateSourceRemoveButton(sourceNum);
+	var panel = Ext.create('Ext.Panel', {
+		id: "remove_button_panel"+sourceNum,
+		layout: {
+			type: 'hbox',
+			align: 'stretch',
+		},
+		height: 25, 
+		border: false,
+		defaults: { border: false,},
+		items: [
+			{html:"", flex:1},
+			button,
+			{html:"", flex:1},
+		],
+	});
+	panel.hide();
+	return panel;
+}
+
 function generateSourceSelector(sourceNumber){ 
     var fileForm = Ext.create('Ext.form.Panel', {
     		id: "fileForm"+sourceNumber,
@@ -81,6 +153,7 @@ function generateSourceSelector(sourceNumber){
      });
      
     var source_choice = Ext.create('Ext.Panel', {
+    	id: "source_choice"+sourceNumber,
     	layout: {
     		type: 'hbox',
     		align: 'stretch',
@@ -118,7 +191,10 @@ function generateSourceSelector(sourceNumber){
     
     var source_add_button_panel = generateSourceAddButtonPanel(sourceNumber);
     
+     var source_remove_button_panel = generateSourceRemoveButtonPanel(sourceNumber);
+    
     var source_selector = Ext.create('Ext.Panel', {
+		id: "source_selector"+sourceNumber,
 		layout: {
 			type: 'vbox',
 			align: 'stretch',
@@ -129,12 +205,13 @@ function generateSourceSelector(sourceNumber){
 		border: false,
 		items: [
 				//{id: 'progress1', html: "<div class='progressPanel'><center><b>Data Source 1</b> -> Data Source 2 -> Data Output -> Save</center></div>", height: 50},     
-				{html: "<div class='progressPanel'><img class='centered' src='resources/images/step1a.png'/></div>", height: 115},
+				{html: "<div class='progressPanel'><img class='centered' src='resources/images/step"+sourceNumber+"a.png'/></div>", height: 115},
 				//{html: "<hr width='95%'/>", height: 20},
 				{html: "", height: 30},
 				source_banner,
 				source_choice, 
 				source_add_button_panel,
+				source_remove_button_panel,
 				{html: "", height: 15},
 				{html: "<hr style='vertical-align:middle;' width='85%'/>", height: 10},
 				{html: "", height: 15},
@@ -143,4 +220,179 @@ function generateSourceSelector(sourceNumber){
 	});
 		
 	return source_selector;
+};
+
+var executeRemoveButton = function(sourceNum){
+	Ext.getCmp("source_choice"+sourceNum).unmask();
+	Ext.getCmp('add_button_panel'+sourceNum).show();
+	Ext.getCmp('remove_button_panel'+sourceNum).hide();
+	Ext.getCmp("main_next").setDisabled(true);
+}
+
+
+
+//called when the Add button is clicked
+var executeAddButton = function(sourceNum){
+	var urlInput = Ext.getCmp("urlInput"+sourceNum);
+	
+	//console.log("getting value: ", urlInput.value);
+	if (urlInput.value){
+		//console.log("Found URL, proceeding");
+		var urlValue =  urlInput.value;
+		if (sourceNum == 1){
+			sourceURL1 = urlValue;
+		}
+		else {
+			sourceURL2 = urlValue;
+		}
+		if (urlValue == "data"+sourceNum+".csv" || urlValue == "undefined") {
+			urlInput = DOMAIN+"/DataEngine/csvSlurper?url="+DOMAIN+ROOT+"/data"+sourceNum+".csv";
+		}
+		else {
+			if (urlValue.slice(-3) == "csv"){
+				urlInput = DOMAIN+"/DataEngine/"+CSVSLURPER+"?url="+urlValue;
+			}
+			else{
+				urlInput = DOMAIN+"/DataEngine/"+JSONSLURPER+"?url="+urlValue;
+			}
+		}
+		//console.log("Preparing request: " + urlInput);
+		Ext.Ajax.request({
+		   method: "GET",
+		   url: urlInput, 
+		   //success: slurperPass,   
+		   //failure: slurperFail,
+		   //jsonData: { foo: 'bar' }  // your json data
+		   params: { format: 'json' },
+		   callback: function(original, successBool, response){
+				//console.log("ResponseText: ", response.responseText);
+				var jsonResponse = JSON.parse(response.responseText);
+				//console.log(jsonResponse);
+				
+				var keys = Object.keys(jsonResponse.feed.records[0].ext);
+				if (sourceNum == 1){
+					global_keys1 = keys;
+				}
+				else {
+					global_keys2 = keys;
+				}
+				//console.log("Data"+sourceNum+"'s keys: ", keys);
+				Ext.define("Data"+sourceNum,{
+					extend: 'Ext.data.Model',
+					fields: keys,
+				});
+							
+				//console.log("Data"+sourceNum+"'s data: ", jsonResponse);				
+				var new_store = Ext.create('Ext.data.Store', {
+					id: "data_store"+sourceNum+"",
+					model: "Data"+sourceNum,
+					autoLoad: true,
+					data: jsonResponse.feed,
+					proxy: {
+						type: 'memory',
+						reader: {
+							type: 'json',
+							root: 'records',
+							record: 'ext',
+						}
+					}
+				});
+				
+				new_store.load({
+					callback: function(records, operation, success) {
+					//console.log("Objects in store: ", new_store.getCount());
+					if(success){
+						//console.log("Source "+sourceNum+": Success!");
+						//console.log("Records: ", records);
+						//console.log("Name: ", jsonResponse.title); 
+						var title = jsonResponse.title;
+						if (title == null){
+							title = "Source "+sourceNum;
+						}
+						var type = jsonResponse.description;
+						if (type == null){
+							type = "Undefined";
+						}
+						if (sourceNum == 1){
+							global_store = new_store;
+						}
+						else {
+							global_store2 = new_store;
+						}
+						var msg = sourceTemplate.applyTemplate({name: title, type: type, url: urlValue, dataRecords: new_store.getCount(), dataFields: keys.length, num: sourceNum});
+						Ext.Msg.show({
+							title: 'Source Request Succeeded',
+							msg: msg,
+							buttons: Ext.Msg.OK,
+						});
+						//sourceTemplate.overwrite("continue"+sourceNum, {name: title, type: type, url: urlValue, dataRecords: new_store.getCount(), dataFields: keys.length, num: sourceNum});
+						//continueButton1.render('continueButton1');
+						Ext.getCmp("main_next").setDisabled(false);
+						//Ext.getCmp("urlButton"+sourceNum).setDisabled(true);
+						Ext.getCmp("source_choice"+sourceNum).mask();
+						Ext.getCmp('add_button_panel'+sourceNum).hide();
+						Ext.getCmp('remove_button_panel'+sourceNum).show();
+					}	
+					else{
+						//console.log("Source "+sourceNum+": Failure.");
+						failureTemplate.overwrite("continue"+sourceNum);
+					}
+				}});
+				
+			}
+		});	
+		return;
+	}
+	else {
+		//console.log("No URL, trying file:");
+		var fileInput = Ext.getCmp("inputFile"+sourceNum);
+		if (fileInput.value){
+			var form = Ext.getCmp('fileForm'+sourceNum).getForm();
+			//console.log("Using form: ", form)
+			/*
+			Ext.Ajax.request({
+					form: form,
+					url: DOMAIN+"/DataEngine/csvSlurper",
+					method: 'POST',
+					isUpload: true,
+				    params: { format: 'json' },
+				    callback: function(original, successBool, response){
+						//console.log("ResponseText: ", response.responseText);
+					}
+				});
+			*/
+			
+			if (fileInput.value.slice(-3) == "csv"){
+				url = DOMAIN+"/DataEngine/"+CSVSLURPER; //+"?url="+urlValue;
+			}
+			else{
+				url = DOMAIN+"/DataEngine/"+JSONSLURPER; //+"?url="+urlValue;
+			}
+			
+			if(form.isValid()){
+				form.submit({
+					method: "POST",
+					url: url,
+					params: {format:'json'}, //force_mime_type: "text/plain"},  
+					//force_mime_type: "text/plain",
+					waitMsg: 'Uploading your file...',
+					success: function(fp, o) {
+						msg('Success', 'Processed file "' + o.result.file + '" on the server');
+					},
+					failure: function (form, o) {
+						console.log("Failure with o = ", o);
+						Ext.Msg.show({
+							title: 'Add Request Failed',
+							msg: o.result.error,
+							buttons: Ext.Msg.OK,
+							icon: Ext.Msg.ERROR
+						});
+					}
+				});
+			}
+		}
+		else{
+			//console.log("No file found, either. Giving up.");
+		}
+	}
 };

@@ -298,7 +298,6 @@ Ext.require('Ext.container.Viewport');
     	
     var save_form_panel =  Ext.create('Ext.form.Panel', {
 		id: "saveForm",
-		border: false,
 		flex: 1,
 		layout: 'anchor',
    		defaults: {
@@ -375,7 +374,7 @@ Ext.require('Ext.container.Viewport');
     var save_panel = Ext.create('Ext.Panel', {
     	flex: 1,
     	border: false,
-    	defaults: {border: false},
+    	//defaults: {border: false},
     	layout: {
     		type: "hbox",
     		align: "stretch",
@@ -383,7 +382,7 @@ Ext.require('Ext.container.Viewport');
     	items: [
     			{html: "", width: 30, border: false},
     			save_form_panel, 
-    			{html: "", width:20}, 
+    			{html: "", width:20, border: false}, 
     			save_preview_panel,
     			{html: "", width: 30, border: false},
     		],
@@ -430,8 +429,12 @@ Ext.require('Ext.container.Viewport');
    	 	var layout = panel.getLayout();
 		layout[direction]();
 		Ext.getCmp("main_prev").setDisabled(!layout.getPrev());
-		executeStep(stepNumber);
-		//Ext.getCmp("main_next").setDisabled(!layout.getNext()); 
+		if(direction=="next"){
+			executeStep(stepNumber);
+		}
+		else{
+			Ext.getCmp("main_next").setDisabled(false); 
+		}
    	}
     
     var main_prev_button = Ext.create('Ext.button.Button', {
