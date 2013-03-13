@@ -9,6 +9,7 @@ var ROOT = "/test/html";
 var JSONSLURPER = "jsonSlurper";
 var CSVSLURPER = "csvSlurper";
 var IDL = "idl";
+var PDL = "pdl";
 
 //var DOMAIN = "http://mm184725-pc.mitre.org:8080";
 
@@ -41,6 +42,10 @@ var sourceURL2 = "";
 var furthestStep = 0;
 
 var linked = false;
+
+var idlID1;
+var idlID2;
+var pdlID;
 
 //OLD
 //takes a checkbox and returns the associated dropdown
@@ -93,6 +98,7 @@ function changeDropdownById(checkboxID, checked){
 	else {
 		dropDown.disabled = "disabled";
 	}
+	changeSubtype(dropDown);
 }
 
 //OLD
@@ -167,8 +173,7 @@ optionsArray = generateOptionsArray(TYPES);
 //console.log(optionsArray);
 
 //the dropdown for Type. Should be generated from optionsArray instead of hardcoded.
-var typeOptions = '<option value="" selected="selected"></option>\
-					<option value="String">String</option>\
+var typeOptions = ' <option value="String">String</option>\
 					<option value="Integer">Integer</option>\
 					<option value="Date">Date</option>\
 					<option value="LatLonAlt">LatLonAlt</option>'
@@ -356,7 +361,7 @@ var executeStep = function(stepNumber){
 			flex: 1,
 			activeItem: 0,
 			items: card_items,
-			tbar: [
+			bbar: [
 				'->',
 				{
 					id: 'move-prev'+num,
@@ -476,11 +481,13 @@ var executeStep = function(stepNumber){
 			var source = 1;
 			var chosen_attributes = chosen_attributes1;
 			var source_uri = sourceURL1;
+			var idlID = 'idlID1';
 		}
 		else {
 			var source = 2;
 			var chosen_attributes = chosen_attributes2;
 			var source_uri = sourceURL2;
+			var idlID = 'idlID2';
 		}
 		//console.log("Storing selected fields and field types");
 		//var checkboxList = Ext.query('*[id^='+source+'-checkbox]');
@@ -497,58 +504,54 @@ var executeStep = function(stepNumber){
 		
 		//prepare the JSON and send it off
 		for (var i=0;i<checkboxList.length;i++) {
-				var checkbox = checkboxList[i];
-				//if (checkbox.checked) {
-				if (true) {
-					var type = typeList[i]; //THIS IS UNSAFE PROBABLY
-					//alternatively, grab the id from the end of the name of the checkbox's id
-					//and find the related element in typeList.
-					//console.log("checked! using type: ", type.value, type.name);
-					//jsonObject[type.name] = [type.value, type.name];
-					chosen_attributes.push({"attribute": type.name, "value": type.value, "source": source});
-					
-					checkboxID = source+"-checkbox-"+checkbox.id;
-					dropdown = fetchDropdownFromCheckboxById(checkboxID);
-					subdropdown = fetchSubtypeFromTypeDropDown(dropdown);
-					console.log("Found subdropdown: ", subdropdown);
-					
-					//console.log("dropdown.value = ", dropdown.value);
-					//console.log("subdropdown.value = ", subdropdown.dom.value);
-					//console.log("TYPES subarray is: ", TYPES[dropdown.value]);
-					
-					format = fetchFormat(TYPES[dropdown.value], subdropdown.dom.value);  
-					
-					
-					var output_name;
-					if (format[3] == null){ //format[3] is the normalized name.
-						output_name = type.name; //if it doesn't exist, use the original field name
-					}
-					else{
-						output_name = format[3]; //if it does, use it
-					}
-					
-					if(format[2] == null) {	//format[2] is the format option
-						idlJSON.dslv[type.name] = [dropdown.value, output_name]; //if it doesn't exist, skip it
-					}
-					else {
-						idlJSON.dslv[type.name] = [dropdown.value, format[2], output_name]; //if it does, use it
-					} 
-					
-					/*
-					if (subdropdown) {
-						idlJSON.dslv[type.name] = [type.value, "$"+type.name, subdropdown.dom.value];
-					}
-					else {
-						idlJSON.dslv[type.name] = [type.value, "$"+type.name];
-					}
-					*/
+				var checkbox = checkboxList[i];		
+				checkboxID = source+"-checkbox-"+checkbox.id;
+				dropdown = fetchDropdownFromCheckboxById(checkboxID);
+				subdropdown = fetchSubtypeFromTypeDropDown(dropdown);
+				console.log("Found subdropdown: ", subdropdown);
+				
+				chosen_attributes.push({"attribute": dropdown.value, "value": subdropdown.dom.value, "source": source});
+				
+				console.log("dropdown.value = ", dropdown.value);
+				console.log("subdropdown.value = ", subdropdown.dom.value);
+				//console.log("TYPES subarray is: ", TYPES[dropdown.value]);
+				
+				format = fetchFormat(TYPES[dropdown.value], subdropdown.dom.value);  
+				
+				var output_name;
+				if (format[3] == null){ //format[3] is the normalized name.
+					output_name = dropdown.value; //if it doesn't exist, use the original field name
 				}
+				else{
+					output_name = format[3]; //if it does, use it
+				}
+				
+				if(format[2] == null) {	//format[2] is the format option
+					idlJSON.dslv[checkbox.data.name] = [dropdown.value, output_name]; //if it doesn't exist, skip it
+				}
+				else {
+					idlJSON.dslv[checkbox.data.name] = [dropdown.value, format[2], output_name]; //if it does, use it
+				} 
+				
+				/*
+				if (subdropdown) {
+					idlJSON.dslv[type.name] = [type.value, "$"+type.name, subdropdown.dom.value];
+				}
+				else {
+					idlJSON.dslv[type.name] = [type.value, "$"+type.name];
+				}
+				*/	
 			}
 		console.log("idl: ", idlJSON);
 		
-		var idlURL = DOMAIN + "/DataEngine/" + IDL; //+ "/31?_method=PUT" ; //this is what a put request would look like
-		//var idlURL = DOMAIN + "/DataEngine/" + IDL + "/"+source+"?_method=PUT" ; //this is what a put request would look like
-	
+		if (window[idlID]) {
+			console.log("Found idlID, using it.");
+			idlURL = DOMAIN + "/DataEngine/" + IDL + "/" + window[idlID] + "?_method=PUT" ; 
+		}
+		else {
+			console.log("No idlID, generating new.");
+			idlURL = DOMAIN + "/DataEngine/" + IDL; //+ "/31?_method=PUT" ;
+		}
 		
 		console.log("Sending request to ", idlURL);	
 		Ext.Ajax.request({
@@ -561,6 +564,9 @@ var executeStep = function(stepNumber){
 				//console.log("ResponseText: ", response.responseText);
 				var jsonResponse = JSON.parse(response.responseText);
 				console.log("IDL responded: ", jsonResponse);
+				var responseString = jsonResponse.idl_uri;
+				var splitString = responseString.split("/");
+				window[idlID] = splitString[(splitString.length)-1] //final item in the split string
 			}
 		});
 		
@@ -615,7 +621,8 @@ var executeStep = function(stepNumber){
 		}
 	
 		//this condition can be removed if the user MUST do something on the merge page before being allowed to proceed
-		if (stepNumber == 2){
+		//if (stepNumber == 2){
+		if (true){
 			Ext.getCmp("main_next").setDisabled(true);
 		}
 	}
@@ -733,6 +740,25 @@ function prepareIDLjson(source_uri) {
 	return idlJSON;
 }
 
+function preparePDLjson() {
+	var pdlJSON = new Object;
+	
+	pdlJSON.version = "Process Description Language (PDL) v1.1301.22";
+	
+	//placeholders for now
+	pdlJSON.pdl_uuid = 5; 
+	pdlJSON.title = "Title placeholder";
+	pdlJSON.poc = "POC placeholder";
+	pdlJSON.creationDate = "2013-01-08T06:00:02Z";
+	pdlJSON.modificationDate = "2013-01-08T06:00:02Z";
+	pdlJSON.description = "description placeholder";
+	pdlJSON.select = new Object;
+	pdlJSON.where = new Object;
+
+	return pdlJSON;
+}
+
+
 function rowClassString(s, index){
 	if (s == 1) {
 		if (index % 2 == 0) {
@@ -819,6 +845,113 @@ function generateCardFromDataPairArray(data_array){
 	return data_grid;
 }
 
+function generateLinkButton(){
+	return { id: 'linkButton',
+	text: 'Link',
+	handler: function(btn) {
+		//console.log("Link clicked");
+		var radioList1 = Ext.query('*[id^=1-merge-radio]');
+		var radio1;
+		for (var i=0; i<radioList1.length; i++){
+			if (radioList1[i].checked){
+				radio1 = radioList1[i];
+			}
+		}
+		var id1 = radio1.id.substr(radio1.id.lastIndexOf('-')-19);
+		var record1;
+		//var record1 = attributeStore1.getById(id1);
+		//var record1 = attributeStore1.getAt(attributeStore1.findExact('id', id1));
+		attributeStore1.each(function(record,idx){
+			if(record.id == id1){
+				record1 = record;
+				//break;	
+			}
+		});						
+		//console.log("record1 is: ", record1);
+	
+		var radioList2 = Ext.query('*[id^=2-merge-radio]');
+		var radio2;
+		for (var i=0; i<radioList2.length; i++){
+			if (radioList2[i].checked){
+				radio2 = radioList2[i];
+			}
+		}
+		/*
+		console.log("Fetched: ", radio1, radio2);
+		console.log("id is: ", radio1.id);
+		console.log("last position of - is: ", radio1.id.lastIndexOf('-'));
+		console.log("just id # is: ", radio1.id.substr(radio1.id.lastIndexOf('-')-19));
+		*/
+		var id2 = radio2.id.substr(radio2.id.lastIndexOf('-')-19);
+		var record2;
+		
+		
+		attributeStore2.each(function(record,idx){
+			if(record.id == id2){
+				record2 = record;
+				//break;	
+			}
+		});
+								
+		//console.log("record2 is: ", record2);
+	
+		linkedAttributes.push({source1: record1.data.attribute, source2: record2.data.attribute});
+		linked = true;
+		console.log("LinkedAttributes is now: ", linkedAttributes);
+	
+		//console.log("merge_panel is: ", merge_panel);
+		var merge_grids_old = Ext.getCmp("merge_grids");
+		//console.log("merge_grids is: ", merge_grids_old);
+	
+		merge_panel.remove(merge_grids_old, true);
+	
+		merge_grids_new = generatePickerPanel();
+	
+		merge_grids_new.doLayout();
+	
+		merge_panel.add(merge_grids_new);
+							
+		merge_panel.doLayout();
+		
+		Ext.getCmp("main_next").setDisabled(false);
+	}}
+};
+
+function generateUnlinkButton(){
+	return {
+	id: 'unlinkButton',
+	text: 'Unlink',
+	handler: function(btn) {
+		for(var i=0; i<chosen_attributes1.length; i++){
+			chosen_attributes1[i].source = "1";
+		}
+		for(var i=0; i<chosen_attributes2.length; i++){
+			chosen_attributes2[i].source = "2";
+		}
+	
+		linkedAttributes = []
+		linked = false;
+		console.log("LinkedAttributes is now: ", linkedAttributes);
+	
+		//console.log("merge_panel is: ", merge_panel);
+		var merge_grids_old = Ext.getCmp("merge_grids");
+		//console.log("merge_grids is: ", merge_grids_old);
+	
+		merge_panel.remove(merge_grids_old, true);
+	
+		merge_grids_new = generatePickerPanel();
+	
+		merge_grids_new.doLayout();
+	
+		merge_panel.add(merge_grids_new);
+							
+		merge_panel.doLayout();
+		
+		Ext.getCmp("main_next").setDisabled(true);
+	}}
+};
+		
+
 function renderMergeCheckbox(value, meta, record, rowIndex){
    		var idString = record.data.source+"-merge-checkbox-"+record.id;
    		return '<input type="checkbox" attribute="'+value+'" id="'+idString+'" name="'+idString+'"/>'; 
@@ -837,6 +970,11 @@ function renderMergeRadio(value, meta, record){
    		var idString = record.data.source+"-merge-radio-"+record.id;
    		return '<input type="radio" name="source'+record.data.source+'" value="'+value+'" id="'+idString+'"/>'; 
    	};
+
+//sometimes you just don't want to render anything.   	
+function renderNothing(value, meta, record){
+	return '';
+}
    	
 function renderMergeSubtype(value){
  	return 'N/A';  
@@ -1005,13 +1143,22 @@ function generatePickerPanel(){
 		autoLoad: true,
 	});
 	
+	if (linked){
+		var linkColumn = {text: "Link", width: 38, dataIndex: 'source', renderer: renderNothing, sortable: false};
+		var linkButton = generateUnlinkButton();
+	}
+	else{
+		var linkColumn = {text: "Link", width: 38, dataIndex: 'source', renderer: renderMergeRadio, sortable: false};
+		var linkButton = generateLinkButton();
+	}
+	
 	var picker_grid1 = Ext.create('Ext.grid.Panel', {
 		id: 'merge_picker1',
 		store: attributeStore1,
 		//border: false,
 		flex: 2,
 		columns: [
-			{text: "Link", width: 38, dataIndex: 'source', renderer: renderMergeRadio, sortable: false},
+			linkColumn,
 			{text: "Attribute", flex: 1, dataIndex: 'attribute', sortable: false},
 			{text: "Type", flex:1, dataIndex: 'value', sortable:false},
 			{text: "Subtype", flex:1, dataIndex: 'value', renderer: renderMergeSubtype, sortable:false},
@@ -1040,20 +1187,13 @@ function generatePickerPanel(){
 		}
 	});
 	
-	if (linked) {
-		//set bbar, Link column renderer
-	}
-	else {
-		//set bbar, link column renderer
-	}
-	
 	var picker_grid2 = Ext.create('Ext.grid.Panel', {
 		id: 'merge_picker2',
 		store: attributeStore2,
 		//border: false,
 		flex: 2,
 		columns: [
-			{text: "Link", width: 38, dataIndex: 'source', renderer: renderMergeRadio, sortable: false},
+			linkColumn,
 			{text: "Attribute", flex: 1, dataIndex: 'attribute', sortable: false},
 			{text: "Type", flex:1, dataIndex: 'value', sortable:false},
 			{text: "Subtype", flex:1, dataIndex: 'value', renderer: renderMergeSubtype, sortable:false},
@@ -1061,71 +1201,7 @@ function generatePickerPanel(){
 			
 		],
 		bbar: [//'->',
-				{
-					id: 'linkButton',
-					text: 'Link',
-					handler: function(btn) {
-						//console.log("Link clicked");
-						var radioList1 = Ext.query('*[id^=1-merge-radio]');
-						var radio1;
-						for (var i=0; i<radioList1.length; i++){
-							if (radioList1[i].checked){
-								radio1 = radioList1[i];
-							}
-						}
-						var id1 = radio1.id.substr(radio1.id.lastIndexOf('-')-19);
-						var record1;
-						//var record1 = attributeStore1.getById(id1);
-						//var record1 = attributeStore1.getAt(attributeStore1.findExact('id', id1));
-						attributeStore1.each(function(record,idx){
-							if(record.id == id1){
-								record1 = record;
-								//break;	
-							}
-						});						
-						//console.log("record1 is: ", record1);
-						
-						var radioList2 = Ext.query('*[id^=2-merge-radio]');
-						var radio2;
-						for (var i=0; i<radioList2.length; i++){
-							if (radioList2[i].checked){
-								radio2 = radioList2[i];
-							}
-						}
-						/*
-						console.log("Fetched: ", radio1, radio2);
-						console.log("id is: ", radio1.id);
-						console.log("last position of - is: ", radio1.id.lastIndexOf('-'));
-						console.log("just id # is: ", radio1.id.substr(radio1.id.lastIndexOf('-')-19));
-						*/
-						var id2 = radio2.id.substr(radio2.id.lastIndexOf('-')-19);
-						var record2;
-						attributeStore2.each(function(record,idx){
-							if(record.id == id2){
-								record2 = record;
-								//break;	
-							}
-						});						
-						//console.log("record2 is: ", record2);
-						
-						linkedAttributes.push({source1: record1.data.attribute, source2: record2.data.attribute});
-						//console.log("LinkedAttributes is now: ", linkedAttributes);
-						
-						//console.log("merge_panel is: ", merge_panel);
-						var merge_grids_old = Ext.getCmp("merge_grids");
-						//console.log("merge_grids is: ", merge_grids_old);
-						
-						merge_panel.remove(merge_grids_old, true);
-						
-						merge_grids_new = generatePickerPanel();
-						
-						merge_grids_new.doLayout();
-						
-						merge_panel.add(merge_grids_new);
-												
-						merge_panel.doLayout();
-					}
-				}
+				linkButton,
 		],		
 		viewConfig: {
 			getRowClass: rowClassFunc, 

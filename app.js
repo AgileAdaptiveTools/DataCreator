@@ -22,6 +22,10 @@ Ext.require('Ext.container.Viewport');
         extend: 'Ext.data.Model',
         fields: ['attribute', 'value', 'source']
     });
+    Ext.define('DataQuart',{
+        extend: 'Ext.data.Model',
+        fields: ['attribute', 'value', 'subvalue', 'source']
+    });
     Ext.define('DataSource',{
         extend: 'Ext.data.Model',
         fields: [

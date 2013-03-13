@@ -135,7 +135,7 @@ function generateSourceSelector(sourceNumber){
 			name: 'urlInput'+sourceNumber,
 			label: "Web Address",
 			hideLabel: 'true',
-			height: 25,
+			height: 40,
 			width: 300,
 		}),
       ],
