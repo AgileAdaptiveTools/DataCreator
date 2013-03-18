@@ -115,6 +115,10 @@ img.centered {
 	display: inline;
 }
 
+.invisible{
+	visibility: hidden;
+}
+
 .banner2 {
 	background-color: #99CCFF;
 	font-size: 30px;

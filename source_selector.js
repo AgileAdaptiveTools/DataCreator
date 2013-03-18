@@ -1,4 +1,6 @@
 //generates the "Add" button used as part of the Source Selector
+//Currently unused
+/*
 var generateSourceAddButton = function(sourceNum){
 	var button = Ext.create('Ext.button.Button', {
 		id: 'source_add_button'+sourceNum,
@@ -12,10 +14,11 @@ var generateSourceAddButton = function(sourceNum){
 	});
 	return button;
 };
+*/
 
 //generates the "Add" button for a Source Panel
 var generateSourceAddButtonPanel = function(sourceNum){
-	var button = generateSourceAddButton(sourceNum);
+	//var button = generateSourceAddButton(sourceNum);
 	var panel = Ext.create('Ext.Panel', {
 		id: "add_button_panel"+sourceNum,
 		layout: {
@@ -27,7 +30,7 @@ var generateSourceAddButtonPanel = function(sourceNum){
 		defaults: { border: false,},
 		items: [
 			{html:"", flex:1},
-			button,
+			//button,
 			{html:"", flex:1},
 		],
 	});
@@ -48,7 +51,7 @@ var generateSourceRemoveButton = function(sourceNum){
 	return button;
 };
 
-//generates the "Add" button for a Source Panel
+//generates the "Remove" button for a Source Panel
 var generateSourceRemoveButtonPanel = function(sourceNum){
 	var button = generateSourceRemoveButton(sourceNum);
 	var panel = Ext.create('Ext.Panel', {
@@ -74,7 +77,8 @@ function generateSourceSelector(sourceNumber){
     var fileForm = Ext.create('Ext.form.Panel', {
     		id: "fileForm"+sourceNumber,
 			flex: 1,
-			border: false,
+			bodyStyle: 'padding: 10px;',
+			//border: false,
 	
 			defaults: {
 				anchor: '100%',
@@ -123,10 +127,23 @@ function generateSourceSelector(sourceNumber){
 			*/
 		});
     
+    var urlButton = Ext.create('Ext.button.Button', {
+		id: 'source_add_button'+sourceNumber,
+		class: 'add_button',
+		text: 'Add',
+		bodyStyle: 'padding: 10px;',
+		//height: 20,
+		width: 50,
+		handler: function(){ 
+			executeAddButton(sourceNumber);
+		},
+	});
+    
     var urlForm = new Ext.form.FormPanel({
-      flex: 1,
+      //flex: 1,
       border: false,
       //layout: 'fit',
+	  bodyStyle: 'padding: 10px;',
       items: [
       	 {html: "<div class='sourcePanel'>Web Address</div>", bodyStyle: "background: #DFE9F6; border: 0px;",},
          new Ext.form.TextArea({
@@ -136,16 +153,25 @@ function generateSourceSelector(sourceNumber){
 			label: "Web Address",
 			hideLabel: 'true',
 			height: 40,
-			width: 300,
+			width: 280,
 		}),
       ],
-      //buttons: [urlButton1]
+      buttons: [urlButton]
    });
-       
+    
+    var urlPanel = Ext.create('Ext.Panel', {
+    	id: "urlPanel"+sourceNumber,
+    	flex: 1,
+    	layout: 'fit',
+    	border: true,
+    	items: [urlForm],
+    });
+    
     var dragForm = new Ext.form.FormPanel({	
 		flex: 1,
 		height: 200,
-      	border: false,
+		bodyStyle: 'padding: 10px;',
+      	//border: false,
       	items: [
       		 {html: "<div class='sourcePanel'>Drag and Drop<br/><br/><img src='resources/images/drophere.png'/></div>", bodyStyle: "border-width:0px;"},
       		 
@@ -161,23 +187,23 @@ function generateSourceSelector(sourceNumber){
     	border: false,
     	flex: 6,
     	items: [
-    		{html: "", width: 60, border: false},
+    		{html: "", width: 40, border: false},
     		dragForm,
-    		{html: "<HR width=1, size=150/>", width: 20, border: false},
+    		{html: "<!-- <HR width=1, size=150/> -->", width: 20, border: false},
 			fileForm,
-			{html: "<HR width=1, size=150/>", width: 20, border: false},
-			urlForm,
-			{html: "", width: 60, border: false},
+			{html: "<!-- <HR width=1, size=150/> -->", width: 20, border: false},
+			urlPanel,
+			{html: "", width: 40, border: false},
 		
     	],
     });
     
 	var source_continue = Ext.create('Ext.Panel', { 
-		id: 'continue'+sourceNumber,
+		//id: 'continue'+sourceNumber,
 		border: false,
 		flex: 5,
 		layout: "fit",
-		items: [{html: "<div class='continuePanel'></div>", border: false}],
+		items: [{html: "<div id='continue"+sourceNumber+"' class='continuePanel'></div>", border: false, flex:1}],
 	});
     
     var numberWord;
@@ -187,11 +213,12 @@ function generateSourceSelector(sourceNumber){
     else {
     	numberWord = "second";
     }
-    var source_banner = generateBannerPanel("Select Data Source "+sourceNumber, "Select your first "+numberWord+" by dragging it from your saved sources on the left, enter the URL for it below or browse for it.");
+    //var source_banner = generateBannerPanel("Select Data Source "+sourceNumber, "Select your first "+numberWord+" by dragging it from your saved sources on the left, enter the URL for it below or browse for it.");
+    var source_banner = {html: "<img class='centered' src='resources/images/selectDS"+sourceNumber+".png'/>"}
     
     var source_add_button_panel = generateSourceAddButtonPanel(sourceNumber);
     
-     var source_remove_button_panel = generateSourceRemoveButtonPanel(sourceNumber);
+    var source_remove_button_panel = generateSourceRemoveButtonPanel(sourceNumber);
     
     var source_selector = Ext.create('Ext.Panel', {
 		id: "source_selector"+sourceNumber,
@@ -207,7 +234,7 @@ function generateSourceSelector(sourceNumber){
 				//{id: 'progress1', html: "<div class='progressPanel'><center><b>Data Source 1</b> -> Data Source 2 -> Data Output -> Save</center></div>", height: 50},     
 				{html: "<div class='progressPanel'><img class='centered' src='resources/images/step"+sourceNumber+"a.png'/></div>", height: 115},
 				//{html: "<hr width='95%'/>", height: 20},
-				{html: "", height: 30},
+				{html: "", height: 10},
 				source_banner,
 				source_choice, 
 				source_add_button_panel,
@@ -222,20 +249,32 @@ function generateSourceSelector(sourceNumber){
 	return source_selector;
 };
 
+var check = Ext.create('Ext.panel.Panel', {
+							id: "check",
+							width: 128,
+							height: 128,
+							floating: true,
+							border: false, 
+							shadow: false,
+							bodyStyle: "background: transparent;",
+							html: "<img src='resources/images/check.png'/>"
+});
+
+
 var executeRemoveButton = function(sourceNum){
+	blankTemplate.overwrite("continue"+sourceNum, {});
 	Ext.getCmp("source_choice"+sourceNum).unmask();
 	Ext.getCmp('add_button_panel'+sourceNum).show();
 	Ext.getCmp('remove_button_panel'+sourceNum).hide();
 	Ext.getCmp("main_next").setDisabled(true);
+	check.hide();
 }
-
 
 
 //called when the Add button is clicked
 var executeAddButton = function(sourceNum){
 	var urlInput = Ext.getCmp("urlInput"+sourceNum);
 	
-	//console.log("getting value: ", urlInput.value);
 	if (urlInput.value){
 		//console.log("Found URL, proceeding");
 		var urlValue =  urlInput.value;
@@ -256,7 +295,6 @@ var executeAddButton = function(sourceNum){
 				urlInput = DOMAIN+"/DataEngine/"+JSONSLURPER+"?url="+urlValue;
 			}
 		}
-		//console.log("Preparing request: " + urlInput);
 		Ext.Ajax.request({
 		   method: "GET",
 		   url: urlInput, 
@@ -319,19 +357,28 @@ var executeAddButton = function(sourceNum){
 						else {
 							global_store2 = new_store;
 						}
-						var msg = sourceTemplate.applyTemplate({name: title, type: type, url: urlValue, dataRecords: new_store.getCount(), dataFields: keys.length, num: sourceNum});
+						//var msg = sourceTemplate.applyTemplate({name: title, type: type, url: urlValue, dataRecords: new_store.getCount(), dataFields: keys.length, num: sourceNum});
+						/*
 						Ext.Msg.show({
 							title: 'Source Request Succeeded',
 							msg: msg,
 							buttons: Ext.Msg.OK,
 						});
-						//sourceTemplate.overwrite("continue"+sourceNum, {name: title, type: type, url: urlValue, dataRecords: new_store.getCount(), dataFields: keys.length, num: sourceNum});
+						*/
+						sourceTemplate.overwrite("continue"+sourceNum, {name: title, type: type, url: urlValue, dataRecords: new_store.getCount(), dataFields: keys.length, num: sourceNum});
 						//continueButton1.render('continueButton1');
 						Ext.getCmp("main_next").setDisabled(false);
 						//Ext.getCmp("urlButton"+sourceNum).setDisabled(true);
 						Ext.getCmp("source_choice"+sourceNum).mask();
 						Ext.getCmp('add_button_panel'+sourceNum).hide();
 						Ext.getCmp('remove_button_panel'+sourceNum).show();
+						
+						urlPanel = Ext.get('urlPanel'+sourceNum);
+						console.log(check);
+						check.show();
+						check.alignTo(urlPanel, "c-c");
+						
+						
 					}	
 					else{
 						//console.log("Source "+sourceNum+": Failure.");
@@ -341,26 +388,25 @@ var executeAddButton = function(sourceNum){
 				
 			}
 		});	
+		
+		/*
+		remove_button = Ext.getCmp("source_remove_button"+sourceNum);
+		console.log("Found remove_button: ",remove_button);
+		remove_button.visibility = "visible";	
+		*/
+		
 		return;
 	}
 	else {
-		//console.log("No URL, trying file:");
+		//console.log("Didn't find URL, ignoring");	
+	}
+};
+	
+/*
+	else {
 		var fileInput = Ext.getCmp("inputFile"+sourceNum);
 		if (fileInput.value){
 			var form = Ext.getCmp('fileForm'+sourceNum).getForm();
-			//console.log("Using form: ", form)
-			/*
-			Ext.Ajax.request({
-					form: form,
-					url: DOMAIN+"/DataEngine/csvSlurper",
-					method: 'POST',
-					isUpload: true,
-				    params: { format: 'json' },
-				    callback: function(original, successBool, response){
-						//console.log("ResponseText: ", response.responseText);
-					}
-				});
-			*/
 			
 			if (fileInput.value.slice(-3) == "csv"){
 				url = DOMAIN+"/DataEngine/"+CSVSLURPER; //+"?url="+urlValue;
@@ -396,3 +442,4 @@ var executeAddButton = function(sourceNum){
 		}
 	}
 };
+*/

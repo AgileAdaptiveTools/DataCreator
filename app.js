@@ -199,7 +199,8 @@ Ext.require('Ext.container.Viewport');
 	});
 	*/
 		
-    var merge_banner = generateBannerPanel("Select Key Fields to Link the Data Sources", "Select fields that will link the two data sources together. They must be of the same type and format. The results of the linking is shown on the right.");
+    //var merge_banner = generateBannerPanel("Select Key Fields to Link the Data Sources", "Select fields that will link the two data sources together. They must be of the same type and format. The results of the linking is shown on the right.");
+	var merge_banner = {html: "<img class='centered' src='resources/images/linkData.png'/>"}
 		
 	var merge_panel = Ext.create('Ext.Panel', {
 		layout: {
@@ -219,7 +220,8 @@ Ext.require('Ext.container.Viewport');
 	});	
    	
    	
-    var attribute_banner1 = generateBannerPanel("Select Data", "Select the data fields that you want to include in your new data source.");
+    //var attribute_banner1 = generateBannerPanel("Select Data", "Select the data fields that you want to include in your new data source.");
+	var attribute_banner1 = {html: "<img class='centered' src='resources/images/chooseData.png'/>"}
 	
 	var source_attribute1 = Ext.create('Ext.Panel', {
 		layout: {
@@ -236,7 +238,8 @@ Ext.require('Ext.container.Viewport');
 	});	
 	
 
-    var attribute_banner2 = generateBannerPanel("Select Data", "Select the data fields that you want to include in your new data source.");
+    //var attribute_banner2 = generateBannerPanel("Select Data", "Select the data fields that you want to include in your new data source.");
+	var attribute_banner2 = {html: "<img class='centered' src='resources/images/chooseData.png'/>"}
 	
 	var source_attribute2 = Ext.create('Ext.Panel', {
 		layout: {
@@ -251,7 +254,7 @@ Ext.require('Ext.container.Viewport');
 				attribute_banner2,
 				]	
 	});
-   	
+   	/*
    	var sourceMarkup = [
    		"<div class='popPanel'>",
    		'<div class="infoText">',
@@ -262,8 +265,26 @@ Ext.require('Ext.container.Viewport');
    		'</div>',
    		'<div id="continueButton{num}"></div>',
    		'</div>',
+   	];*/
+   	var sourceMarkup = [
+   		"<div class='popPanel'>",
+   		'<div class="infoText">',
+   		'Name: {name}<br/>',
+   		'URL: {url}<br/>',
+   		'<br/>{dataRecords} Data Records, {dataFields} Data Fields<br/>',
+   		'</div>',
+   		'</div>',
    	];
    	var sourceTemplate = Ext.create('Ext.Template', sourceMarkup);
+   	
+   	var blankMarkup = [
+   		"<div class='invisible'>",
+   		'Blank.<br/>',
+   		'Blank.<br/>',
+   		'<br/>Blank.<br/>',
+   		'</div>',
+   	];
+   	var blankTemplate = Ext.create('Ext.Template', blankMarkup);
    	
    	var failureMarkup = [
    		"<div class='continuePanel'>",
@@ -298,7 +319,8 @@ Ext.require('Ext.container.Viewport');
 	
 	var source_selector2 = generateSourceSelector(2);
 		
-	var result_banner = generateBannerPanel("Save", "");
+	//var result_banner = generateBannerPanel("Save", "");
+    var result_banner = {html: "<img class='centered' src='resources/images/saveData.png'/>"}
     	
     var save_form_panel =  Ext.create('Ext.form.Panel', {
 		id: "saveForm",
@@ -558,18 +580,31 @@ Ext.require('Ext.container.Viewport');
 		//height: 400,
 	});
 
+var delayLaunch = new Ext.util.DelayedTask(function(){
+    Ext.create('Ext.container.Viewport', {
+            layout: 'fit',
+            border: false,
+            items: [
+                main_panel,
+            ]
+    });
+    blankTemplate.overwrite("continue1", {});
+	blankTemplate.overwrite("continue2", {});
+});
+
 Ext.application({
     name: 'DataCreator',
     launch: function() {
+    	delayLaunch.delay(1); //doesn't work
+        /*
         Ext.create('Ext.container.Viewport', {
             layout: 'fit',
             border: false,
             items: [
-                //{ title: 'Hello Ext', html : 'Hello! Welcome to Ext JS.' }
                 main_panel,
             ]
         });
-            
+        */    
     }
 });
 
