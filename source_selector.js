@@ -30,7 +30,7 @@ var generateSourceAddButtonPanel = function(sourceNum){
 		defaults: { border: false,},
 		items: [
 			{html:"", flex:1},
-			//button,
+			{html:"Blank", bodyStyle: "color: #FFF;", flex:1},
 			{html:"", flex:1},
 		],
 	});
@@ -42,11 +42,11 @@ var generateSourceRemoveButton = function(sourceNum){
 		id: 'source_remove_button'+sourceNum,
 		class: 'remove_button',
 		text: 'Remove',
-		//height: 20,
+		height: 20,
 		width: 50,
 		handler: function(){ 
 			executeRemoveButton(sourceNum);
-		},
+		}
 	});
 	return button;
 };
@@ -58,18 +58,19 @@ var generateSourceRemoveButtonPanel = function(sourceNum){
 		id: "remove_button_panel"+sourceNum,
 		layout: {
 			type: 'hbox',
-			align: 'stretch',
+			align: 'stretch'
 		},
 		height: 25, 
 		border: false,
-		defaults: { border: false,},
+		defaults: { border: false},
 		items: [
 			{html:"", flex:1},
 			button,
-			{html:"", flex:1},
-		],
+			{html:"", flex:1}
+		]
 	});
-	panel.hide();
+	console.log("Generated button: ", button);
+	//panel.hide();
 	return panel;
 }
 
@@ -146,13 +147,13 @@ function generateSourceSelector(sourceNumber){
 	  bodyStyle: 'padding: 10px;',
       items: [
       	 {html: "<div class='sourcePanel'>Web Address</div>", bodyStyle: "background: #DFE9F6; border: 0px;",},
-         new Ext.form.TextArea({
+         new Ext.form.TextField({
          	 xtype: 'textfield',
 			id:'urlInput'+sourceNumber,
 			name: 'urlInput'+sourceNumber,
 			label: "Web Address",
 			hideLabel: 'true',
-			height: 40,
+			//height: 40,
 			width: 280,
 		}),
       ],
@@ -186,6 +187,9 @@ function generateSourceSelector(sourceNumber){
     	},
     	border: false,
     	flex: 6,
+    	defaults: {
+    		cls: 'round-corners'
+    	},
     	items: [
     		{html: "", width: 40, border: false},
     		dragForm,
@@ -198,13 +202,34 @@ function generateSourceSelector(sourceNumber){
     	],
     });
     
+    var removeButtonPanel = generateSourceRemoveButtonPanel(sourceNumber);
+    //console.log("RemoveButtonPanel = ", removeButtonPanel);
+    
+    var source_info = Ext.create('Ext.Panel', {
+		 title: "Source Information", 
+		 id: "sourceInfo"+sourceNumber, 
+		 defaults: {border: false},
+		 layout: { 
+		 	type: 'vbox',
+		 	align: 'stretch'
+		 },
+		 items: [{html: "<div id='continue"+sourceNumber+"' class='continuePanel'></div>", flex:1}, removeButtonPanel],
+		 flex:2    
+    });
+    
 	var source_continue = Ext.create('Ext.Panel', { 
 		//id: 'continue'+sourceNumber,
 		border: false,
+		//title: "Source Information",
 		flex: 5,
-		layout: "fit",
-		items: [{html: "<div id='continue"+sourceNumber+"' class='continuePanel'></div>", border: false, flex:1}],
+		layout: "hbox",
+		items: [{html: "", border: false, flex:1},
+				source_info,
+				{html: "", border: false, flex:1}],
 	});
+	//console.log("sourceInfo: ", Ext.getCmp("sourceInfo"+sourceNumber));
+	Ext.getCmp("sourceInfo"+sourceNumber).hide();
+    
     
     var numberWord;
     if (sourceNumber == 1){
@@ -216,9 +241,8 @@ function generateSourceSelector(sourceNumber){
     //var source_banner = generateBannerPanel("Select Data Source "+sourceNumber, "Select your first "+numberWord+" by dragging it from your saved sources on the left, enter the URL for it below or browse for it.");
     var source_banner = {html: "<img class='centered' src='resources/images/selectDS"+sourceNumber+".png'/>"}
     
-    var source_add_button_panel = generateSourceAddButtonPanel(sourceNumber);
-    
-    var source_remove_button_panel = generateSourceRemoveButtonPanel(sourceNumber);
+    //var source_add_button_panel = generateSourceAddButtonPanel(sourceNumber);
+    //var source_remove_button_panel = generateSourceRemoveButtonPanel(sourceNumber);
     
     var source_selector = Ext.create('Ext.Panel', {
 		id: "source_selector"+sourceNumber,
@@ -237,12 +261,12 @@ function generateSourceSelector(sourceNumber){
 				{html: "", height: 10},
 				source_banner,
 				source_choice, 
-				source_add_button_panel,
-				source_remove_button_panel,
 				{html: "", height: 15},
-				{html: "<hr style='vertical-align:middle;' width='85%'/>", height: 10},
-				{html: "", height: 15},
+				//{html: "<hr style='vertical-align:middle;' width='85%'/>", height: 10},
+				//{html: "", height: 15},
 				source_continue,
+				//source_add_button_panel,
+				//source_remove_button_panel,
 				],
 	});
 		
@@ -264,10 +288,11 @@ var check = Ext.create('Ext.panel.Panel', {
 var executeRemoveButton = function(sourceNum){
 	blankTemplate.overwrite("continue"+sourceNum, {});
 	Ext.getCmp("source_choice"+sourceNum).unmask();
-	Ext.getCmp('add_button_panel'+sourceNum).show();
-	Ext.getCmp('remove_button_panel'+sourceNum).hide();
+	//Ext.getCmp('add_button_panel'+sourceNum).show();
+	//Ext.getCmp('remove_button_panel'+sourceNum).hide();
 	Ext.getCmp("main_next").setDisabled(true);
 	check.hide();
+	Ext.getCmp("sourceInfo"+sourceNum).hide();
 }
 
 
@@ -370,13 +395,14 @@ var executeAddButton = function(sourceNum){
 						Ext.getCmp("main_next").setDisabled(false);
 						//Ext.getCmp("urlButton"+sourceNum).setDisabled(true);
 						Ext.getCmp("source_choice"+sourceNum).mask();
-						Ext.getCmp('add_button_panel'+sourceNum).hide();
-						Ext.getCmp('remove_button_panel'+sourceNum).show();
+						//Ext.getCmp('add_button_panel'+sourceNum).hide();
+						//Ext.getCmp('remove_button_panel'+sourceNum).show();
 						
 						urlPanel = Ext.get('urlPanel'+sourceNum);
 						console.log(check);
 						check.show();
 						check.alignTo(urlPanel, "c-c");
+						Ext.getCmp("sourceInfo"+sourceNum).show();
 						
 						
 					}	

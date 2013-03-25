@@ -360,6 +360,7 @@ var executeStep = function(stepNumber){
 			border: true,
 			title: "Data Preview",
 			flex: 1,
+			height: 250,
 			activeItem: 0,
 			items: card_items,
 			bbar: [
@@ -379,7 +380,7 @@ var executeStep = function(stepNumber){
 						navigate(btn.up("panel"), "next", num);
 					}
 				}
-			],
+			]
 		});
 		
 		formatted_keys = listFormatter(keys, num);
@@ -413,6 +414,7 @@ var executeStep = function(stepNumber){
 			border: true,
 			title: "Field Selection",
 			flex: 1,
+			height: 250,
 			selModel: checkboxModel,
 	
 			columns: [
@@ -459,7 +461,7 @@ var executeStep = function(stepNumber){
 			},
 			border: false,
 			defaults: {border: false},
-			flex: 1,
+			height: 250,
 			items: [
 				{html:"", width:30},
 				picker_grid,
@@ -706,7 +708,7 @@ var executeStep = function(stepNumber){
 								}
 							],						
 						});
-						save_preview_panel.add(final_preview);					
+						Ext.getCmp("savePreview").add(final_preview);					
 					}
 					else{
 						//console.log("Not a success");
@@ -1083,6 +1085,7 @@ function generatePickerPanel(){
 		flex: 1,
 		activeItem: 0,
 		items: card_items1,
+		//autoscroll: true,
 		
 		bbar: [
 			'->', // greedy spacer so that the buttons are aligned to each side
@@ -1110,6 +1113,8 @@ function generatePickerPanel(){
 		flex: 1,
 		activeItem: 0,
 		items: card_items2,
+		//autoscroll: true,
+
 		
 		bbar: [
 			'->', // greedy spacer so that the buttons are aligned to each side
@@ -1128,7 +1133,7 @@ function generatePickerPanel(){
 					navigate(btn.up("panel"), "next", 4);
 				}
 			}
-		],
+		]
 	});
 	
 	//console.log("Attempting to use: ", chosen_attributes1.concat(chosen_attributes2));
@@ -1262,7 +1267,7 @@ function generatePickerPanel(){
 	var merge_report_holder = Ext.create('Ext.Panel', {
 		layout: 'fit',
 		flex: 1,
-		border: false,
+		title: "Merge Preview",
 		defaults: {border: false},
 		items: [{html: percentHTML}],	
 	});

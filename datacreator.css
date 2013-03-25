@@ -128,4 +128,19 @@ img.centered {
 	border-width: 2px;
 	border-style: solid;	
 }
+/*
+.remove_button {
+	margin-left: auto;
+	margin-right: auto;
+}
+*/
+
+.round-corners {
+    -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
+    -o-border-radius: 2px;
+    -ms-border-radius: 2px;
+    -khtml-border-radius: 2px;
+    border-radius: 2px;
+}
 
