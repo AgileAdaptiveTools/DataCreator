@@ -325,7 +325,7 @@ var executeStep = function(stepNumber){
 			var num = 2;
 			var source_attribute = source_attribute2;
 		}
-		check.hide();
+		//check.hide();
 		
 		data_store.each(function(record,idx){
 			 //console.log("new card with: ", record.data);

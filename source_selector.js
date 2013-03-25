@@ -206,7 +206,7 @@ function generateSourceSelector(sourceNumber){
     //console.log("RemoveButtonPanel = ", removeButtonPanel);
     
     var source_info = Ext.create('Ext.Panel', {
-		 title: "Source Information", 
+		 title: "Source Successfully Added", 
 		 id: "sourceInfo"+sourceNumber, 
 		 defaults: {border: false},
 		 layout: { 
@@ -273,6 +273,7 @@ function generateSourceSelector(sourceNumber){
 	return source_selector;
 };
 
+/*
 var check = Ext.create('Ext.panel.Panel', {
 							id: "check",
 							width: 128,
@@ -283,15 +284,15 @@ var check = Ext.create('Ext.panel.Panel', {
 							bodyStyle: "background: transparent;",
 							html: "<img src='resources/images/check.png'/>"
 });
-
+*/
 
 var executeRemoveButton = function(sourceNum){
 	blankTemplate.overwrite("continue"+sourceNum, {});
-	Ext.getCmp("source_choice"+sourceNum).unmask();
+	Ext.getCmp("source_choice"+sourceNum).show();
 	//Ext.getCmp('add_button_panel'+sourceNum).show();
 	//Ext.getCmp('remove_button_panel'+sourceNum).hide();
 	Ext.getCmp("main_next").setDisabled(true);
-	check.hide();
+	//check.hide();
 	Ext.getCmp("sourceInfo"+sourceNum).hide();
 }
 
@@ -394,14 +395,13 @@ var executeAddButton = function(sourceNum){
 						//continueButton1.render('continueButton1');
 						Ext.getCmp("main_next").setDisabled(false);
 						//Ext.getCmp("urlButton"+sourceNum).setDisabled(true);
-						Ext.getCmp("source_choice"+sourceNum).mask();
+						Ext.getCmp("source_choice"+sourceNum).hide();
 						//Ext.getCmp('add_button_panel'+sourceNum).hide();
 						//Ext.getCmp('remove_button_panel'+sourceNum).show();
 						
-						urlPanel = Ext.get('urlPanel'+sourceNum);
-						console.log(check);
-						check.show();
-						check.alignTo(urlPanel, "c-c");
+						//urlPanel = Ext.get('urlPanel'+sourceNum);
+						//check.show();
+						//check.alignTo(urlPanel, "c-c");
 						Ext.getCmp("sourceInfo"+sourceNum).show();
 						
 						
