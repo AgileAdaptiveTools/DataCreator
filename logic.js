@@ -1190,6 +1190,14 @@ function generatePickerPanel(){
 		],	
 		viewConfig: {
 			getRowClass: rowClassFunc,
+		},
+		listeners: {
+				selectionchange: function(t, record, index) {
+					console.log("Selection has changed: ", record);
+					//generate the preview object
+					//destroy the old one
+					//add the new one in its place
+				}
 		}
 	});
 	
@@ -1214,7 +1222,7 @@ function generatePickerPanel(){
 		}		
 	});
 	
-	var picker_grid_holder = Ext.create('Ext.Panel', {
+	var source1_holder = Ext.create('Ext.Panel', {
 		layout: {
 			type: 'vbox',
 			align: 'stretch',
@@ -1222,12 +1230,12 @@ function generatePickerPanel(){
 		flex: 1,
 		border: false,
 		defaults: {border: false},
-		items: [picker_grid1, 
-				{html: "", height: 10, border: false},
-				picker_grid2],
+		items: [picker_grid1] 
+				//{html: "", height: 10, border: false},
+				//picker_grid2],
 	});
 	
-	var merge_preview_holder = Ext.create('Ext.Panel', {
+	var source2_holder = Ext.create('Ext.Panel', {
 		layout: {
 			type: 'vbox',
 			align: 'stretch',
@@ -1235,9 +1243,9 @@ function generatePickerPanel(){
 		flex: 1,
 		border: false,
 		defaults: {border: false},
-		items: [merge_preview_panel1, 
-				{html: "", height: 10, border: false},
-				merge_preview_panel2],
+		items: [picker_grid2]
+				//{html: "", height: 10, border: false},
+				//merge_preview_panel2],
 	});
 	
 	//DEMO STUFF -- will be replaced
@@ -1285,10 +1293,10 @@ function generatePickerPanel(){
 		flex: 1,
 		items: [
 			{html:"", width:30},
-			picker_grid_holder,
+			source1_holder,
 			{html:"", width:10},
-			merge_preview_holder,
-			{html:"", width:10},
+			source2_holder,
+			//{html:"", width:10},
 			merge_report_holder,
 			{html:"", width:30},
 		],
