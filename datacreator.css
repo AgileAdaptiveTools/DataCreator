@@ -135,6 +135,16 @@ img.centered {
 }
 */
 
+.clickable{
+   cursor: pointer;
+}
+
+/*override the panel header cursor */
+.x-form-field {
+    cursor: pointer;
+}
+</style>
+
 .round-corners {
     -moz-border-radius: 2px;
     -webkit-border-radius: 2px;

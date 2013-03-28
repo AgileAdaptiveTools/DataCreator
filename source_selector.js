@@ -291,7 +291,9 @@ var executeRemoveButton = function(sourceNum){
 	Ext.getCmp("source_choice"+sourceNum).show();
 	//Ext.getCmp('add_button_panel'+sourceNum).show();
 	//Ext.getCmp('remove_button_panel'+sourceNum).hide();
-	Ext.getCmp("main_next").setDisabled(true);
+	//Ext.getCmp("main_next").setDisabled(true);
+	//Ext.getCmp("main_next").setSrc("resources/images/button_next_disabled.png");
+	disableButton("next", true);
 	//check.hide();
 	Ext.getCmp("sourceInfo"+sourceNum).hide();
 }
@@ -393,7 +395,9 @@ var executeAddButton = function(sourceNum){
 						*/
 						sourceTemplate.overwrite("continue"+sourceNum, {name: title, type: type, url: urlValue, dataRecords: new_store.getCount(), dataFields: keys.length, num: sourceNum});
 						//continueButton1.render('continueButton1');
-						Ext.getCmp("main_next").setDisabled(false);
+						//Ext.getCmp("main_next").setDisabled(false);
+						//Ext.getCmp("main_next").setSrc("resources/images/button_next.png");
+						disableButton("next", false);
 						//Ext.getCmp("urlButton"+sourceNum).setDisabled(true);
 						Ext.getCmp("source_choice"+sourceNum).hide();
 						//Ext.getCmp('add_button_panel'+sourceNum).hide();

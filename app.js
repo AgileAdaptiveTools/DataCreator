@@ -454,15 +454,67 @@ Ext.require('Ext.container.Viewport');
    	 	var panel = Ext.getCmp('input_details');
    	 	var layout = panel.getLayout();
 		layout[direction]();
-		Ext.getCmp("main_prev").setDisabled(!layout.getPrev());
+		//Ext.getCmp("main_prev").setDisabled(!layout.getPrev());
+		disableButton("prev", !layout.getPrev());
 		if(direction=="next"){
 			executeStep(stepNumber);
 		}
 		else{
-			Ext.getCmp("main_next").setDisabled(false); 
+			//Ext.getCmp("main_next").setDisabled(false); 
+			disableButton("next", false);
 		}
    	}
     
+    var main_prev_button = Ext.create('Ext.Img', {
+    	id: "main_prev",
+    	class: "clickable",
+    	src: "resources/images/button_back_disabled.png",
+    	width: 60,
+    	disabled: true,
+		listeners: {
+			el: {
+				click: function() {
+    				step--;
+					main_navigate("prev", step);
+				}	
+			}
+    	}
+	});
+	
+	
+	var main_next_button = Ext.create('Ext.Img', {
+    	id: "main_next",
+    	//baseCls: "clickable",
+    	src: "resources/images/button_next_disabled.png",
+    	width: 60,
+    	disabled: true,
+		listeners: {
+			el: {
+				click: function() {
+					if(!main_next_button.disabled){
+						step++;
+						main_navigate("next", step);
+					}
+				}
+			}
+		}
+	});
+	
+	function disableButton(direction, doDisable){
+		var button = Ext.getCmp("main_"+direction);
+		button.setDisabled(doDisable);
+		if (doDisable) {
+			button.setSrc("resources/images/button_"+direction+"_disabled.png");
+			button.removeCls("clickable");
+		}
+		else {
+			button.setSrc("resources/images/button_"+direction+".png");
+			button.addCls("clickable");
+		}
+	}
+	
+	
+    /*
     var main_prev_button = Ext.create('Ext.button.Button', {
     	id: "main_prev",
     	width: 100,
@@ -474,6 +526,7 @@ Ext.require('Ext.container.Viewport');
 		}
 	});
 	
+	
 	var main_next_button = Ext.create('Ext.button.Button', {
     	id: "main_next",
     	width: 100,
@@ -484,6 +537,7 @@ Ext.require('Ext.container.Viewport');
 			main_navigate("next", step);
 		}
 	});
+	*/
 
     var navigation_bar = Ext.create('Ext.Panel', {
     	height: 50,

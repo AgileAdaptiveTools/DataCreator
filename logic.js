@@ -473,7 +473,6 @@ var executeStep = function(stepNumber){
 		});
 		
 		 source_attribute.add(source);	
-		 //Ext.getCmp("main_next").setDisabled(false);
 		 
 		 
 	}
@@ -626,13 +625,17 @@ var executeStep = function(stepNumber){
 		//this condition can be removed if the user MUST do something on the merge page before being allowed to proceed
 		//if (stepNumber == 2){
 		if (true){
-			Ext.getCmp("main_next").setDisabled(true);
+			//Ext.getCmp("main_next").setDisabled(true);
+			//Ext.getCmp("main_next").setSrc("resources/images/button_next_disabled.png");
+			disableButton("next", true);
 		}
 	}
 	//occurs after the user has finished the merge sources page. The results are packaged into a PDL and sent off, then the final preview is generated
 	else if (stepNumber == 5){
 		//console.log("Entering step 5");
-		 Ext.getCmp("main_next").setDisabled(true);
+		 //Ext.getCmp("main_next").setDisabled(true);
+		 //Ext.getCmp("main_next").setSrc("resources/images/button_next_disabled.png");
+		disableButton("next", true);
 		//var joinURL = DOMAIN+"/DataEngine/join/inner?idls=1,2&pdl=3";
 		var joinURL = "http://seamlessc2.mitre.org:8080/DataEngine/join/inner?idls=2,4&pdl=3&format=json";
 		//console.log("Making GET request to: ", joinURL);
@@ -916,7 +919,9 @@ function generateLinkButton(){
 							
 		merge_panel.doLayout();
 		
-		Ext.getCmp("main_next").setDisabled(false);
+		//Ext.getCmp("main_next").setDisabled(false);
+		//Ext.getCmp("main_next").setSrc("resources/images/button_next.png");
+		disableButton("next", false);
 	}}
 };
 
@@ -950,7 +955,9 @@ function generateUnlinkButton(){
 							
 		merge_panel.doLayout();
 		
-		Ext.getCmp("main_next").setDisabled(true);
+		//Ext.getCmp("main_next").setDisabled(true);
+		//Ext.getCmp("main_next").setSrc("resources/images/button_next_disabled.png");
+		disableButton("next", true);
 	}}
 };
 		
@@ -1012,8 +1019,8 @@ function rowClassFunc(record, index){
 };
 
 function generatePickerPanel(){
-	var card_items1 = [];
-	var card_items2 = [];
+	//var card_items1 = [];
+	//var card_items2 = [];
 	 
 	/*
 	if (global_store.getCount() > global_store2.getCount()){
@@ -1042,6 +1049,7 @@ function generatePickerPanel(){
 			}
 		}
 	*/
+	/*
 	global_store.each(function(record,idx){
 		var data_array = [];
 		for(var i=0; i<chosen_attributes1.length; i++){
@@ -1077,7 +1085,8 @@ function generatePickerPanel(){
 		}
 		card_items2.push(generateCardFromDataArray(data_array));
 	});
-	
+	*/
+	/*
 	var merge_preview_panel1 = Ext.create('Ext.Panel', {
 		id: "merge_preview_panel1",
 		layout: 'card',
@@ -1135,6 +1144,7 @@ function generatePickerPanel(){
 			}
 		]
 	});
+	*/
 	
 	//console.log("Attempting to use: ", chosen_attributes1.concat(chosen_attributes2));
 	attributeStore1 = Ext.create('Ext.data.Store', {
