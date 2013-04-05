@@ -334,7 +334,9 @@ var executeStep = function(stepNumber){
 	console.log("executeStep called with number: ", stepNumber);
 	//Step #1 and Step #3 involve preparing the Attribute Selection grid after a source have been chosen.
 	//It needs to set up both the Attribute Selection Panel and the Source Preview panel.
-	furthestStep = stepNumber;
+	if (furthestStep < stepNumber){
+		furthestStep = stepNumber;
+	}
 	if (stepNumber == 1 || stepNumber == 3){
 		//console.log("Parsing data source");
 		var card_items = []
@@ -616,6 +618,7 @@ var executeStep = function(stepNumber){
 		});
 		
 		if (stepNumber == 4) {
+			/*
 			var merge_grids_old = Ext.getCmp("merge_grids");
 			console.log("merge_grids_old is: ", merge_grids_old);
 	
@@ -633,8 +636,14 @@ var executeStep = function(stepNumber){
 			merge_panel.add(merge_grids);
 			
 			merge_panel.doLayout();
+			*/
 			
+			unlinkSources();
 			
+			updatePickerPanels();
+			updatePreviewPanel(1, false);
+			updatePreviewPanel(2, false);
+
 			/*		
 			var picker_grid1Scroller = picker_grid1.verticalScroller;
 			console.log("scroll = ", picker_grid1Scroller);
@@ -929,6 +938,18 @@ function generateCardFromDataPairArray(data_array){
 	return data_grid;
 }
 
+function unlinkSources() {
+	for(var i=0; i<chosen_attributes1.length; i++){
+		chosen_attributes1[i].source = "1";
+	}
+	for(var i=0; i<chosen_attributes2.length; i++){
+		chosen_attributes2[i].source = "2";
+	}
+	linkedAttributes = []
+	linked = false;
+
+}
+
 function linkSources(record1, record2) {
 		console.log("record1 and record2 are: ", record1, record2);
 		if (linked) {
@@ -943,24 +964,7 @@ function linkSources(record1, record2) {
 		
 		linkedAttributes.push({source1: record1.data.attribute, source2: record2.data.attribute});
 		linked = true;
-		//console.log("LinkedAttributes is now: ", linkedAttributes);
-	
-		//console.log("merge_panel is: ", merge_panel);
-		var merge_grids_old = Ext.getCmp("merge_grids");
-		//console.log("merge_grids is: ", merge_grids_old);
-	
-		merge_panel.remove(merge_grids_old, true);
-	
-		merge_grids_new = generatePickerPanel();
-	
-		merge_grids_new.doLayout();
-	
-		merge_panel.add(merge_grids_new);
-							
-		merge_panel.doLayout();
 		
-		//Ext.getCmp("main_next").setDisabled(false);
-		//Ext.getCmp("main_next").setSrc("resources/images/button_next.png");
 		disableButton("next", false);
 }
 
@@ -1198,329 +1202,7 @@ function rowClassFunc(record, index){
 	}
 };
 
-function generatePickerPanel(){
-	//var card_items1 = [];
-	//var card_items2 = [];
-	 
-	/*
-	if (global_store.getCount() > global_store2.getCount()){
-		var maxIndex = global_store.getCount();
-	}
-	else{
-		var maxIndex = global_store2.getCount();
-	}
-	
-	for (var index = 0; index < maxIndex; index++){
-		var data_array = []
-		if (index < global_store.getCount()){
-			//console.log("global store is: ", global_store);
-			var record = global_store.getAt(index);
-			//console.log(record);
-			for(var i=0; i<chosen_attributes1.length; i++){
-				var attribute = chosen_attributes1[i].attribute;
-				data_array.push({attribute: attribute, value: record.data[attribute], source:1});
-			}
-		}
-		if (index < global_store2.getCount()){
-			var record = global_store2.getAt(index);
-			for(var i=0; i<chosen_attributes2.length; i++){
-				var attribute = chosen_attributes2[i].attribute;
-				data_array.push({attribute: attribute, value: record.data[attribute], source:2});
-			}
-		}
-	*/
-	
-	global_store.each(function(record,idx){
-		var data_array = [];
-		for(var i=0; i<chosen_attributes1.length; i++){
-			var attribute = chosen_attributes1[i].attribute;
-			var sourceNumber = 1;
-			for(var j=0; j<linkedAttributes.length;j++){
-				//console.log("Comparing: ", linkedAttributes[j].source1, attribute);
-				if(linkedAttributes[j].source1 == attribute){
-					sourceNumber = 3;
-					chosen_attributes1[i].source = "1+2";
-					break;
-				}
-			}
-			//data_array.push({attribute: attribute, value: record.data[attribute], source:sourceNumber});
-		}
-		//card_items1.push(generateCardFromDataArray(data_array));
-	});
-		
-	global_store2.each(function(record,idx){
-		var data_array = [];
-		for(var i=0; i<chosen_attributes2.length; i++){
-			var attribute = chosen_attributes2[i].attribute;
-			var sourceNumber = 2;
-			for(var j=0; j<linkedAttributes.length;j++){
-				//console.log("Comparing: ", linkedAttributes[j].source2, attribute);
-				if(linkedAttributes[j].source2 == attribute){
-					sourceNumber = 3;
-					chosen_attributes2[i].source = "1+2";
-					break;
-				}
-			}
-			//data_array.push({attribute: attribute, value: record.data[attribute], source:sourceNumber});
-		}
-		//card_items2.push(generateCardFromDataArray(data_array));
-	});
-	
-	/*
-	var merge_preview_panel1 = Ext.create('Ext.Panel', {
-		id: "merge_preview_panel1",
-		layout: 'card',
-		border: false,
-		flex: 1,
-		activeItem: 0,
-		items: card_items1,
-		//autoscroll: true,
-		
-		bbar: [
-			'->', // greedy spacer so that the buttons are aligned to each side
-			{
-				id: 'move-prev3',
-				text: '<--',
-				handler: function(btn) {
-					navigate(btn.up("panel"), "prev", 3);
-				},
-				disabled: true
-			},
-			{
-				id: 'move-next3',
-				text: '-->',
-				handler: function(btn) {
-					navigate(btn.up("panel"), "next", 3);
-				}
-			}
-		],
-	});			
-	var merge_preview_panel2 = Ext.create('Ext.Panel', {
-		id: "merge_preview_panel2",
-		layout: 'card',
-		border: false,
-		flex: 1,
-		activeItem: 0,
-		items: card_items2,
-		//autoscroll: true,
-
-		
-		bbar: [
-			'->', // greedy spacer so that the buttons are aligned to each side
-			{
-				id: 'move-prev4',
-				text: '<--',
-				handler: function(btn) {
-					navigate(btn.up("panel"), "prev", 4);
-				},
-				disabled: true
-			},
-			{
-				id: 'move-next4',
-				text: '-->',
-				handler: function(btn) {
-					navigate(btn.up("panel"), "next", 4);
-				}
-			}
-		]
-	});
-	*/
-	
-	//console.log("Attempting to use: ", chosen_attributes1.concat(chosen_attributes2));
-	attributeStore1 = Ext.create('Ext.data.Store', {
-		model: 'DataFour',
-		data: chosen_attributes1, //.concat(chosen_attributes2),
-		autoLoad: true,
-	});
-	
-	attributeStore2 = Ext.create('Ext.data.Store', {
-		model: 'DataFour',
-		data: chosen_attributes2, //.concat(chosen_attributes2),
-		autoLoad: true,
-	});
-	
-	console.log("chosen_attributes1 = ", chosen_attributes1);
-	console.log("attribute_store1 = ", attributeStore1);
-	
-	if (linked){
-		var linkColumn1 = {text: "Link", width: 38, dataIndex: 'attribute', renderer: renderMergeRadio1, sortable: false};
-		var linkColumn2 = {text: "Link", width: 38, dataIndex: 'attribute', renderer: renderMergeRadio2, sortable: false};
-		var linkButton = generateUnlinkButton();
-	}
-	else{
-		var linkColumn1 = {text: "Link", width: 38, dataIndex: 'attribute', renderer: renderMergeRadio1, sortable: false};
-		var linkColumn2 = {text: "Link", width: 38, dataIndex: 'attribute', renderer: renderMergeRadio2, sortable: false};
-		var linkButton = generateLinkButton();
-	}
-	
-	var checkboxModel = Ext.create('Ext.selection.CheckboxModel', {
-			checkOnly: true,
-			listeners: {
-				deselect: function(model, record, index) {
-					//id = record.get('id');
-					//alert(id);
-					var idString = record.data.source+"-checkbox-"+record.id;
-					changeDropdownById(idString, false);
-				},
-				select: function(model, record, index) {
-					//id = record.get('id');
-					//alert(id);
-					var idString = record.data.source+"-checkbox-"+record.id;
-					changeDropdownById(idString, true);
-				}
-			}
-		});
-	
-	var picker_grid1 = Ext.create('Ext.grid.Panel', {
-		id: 'merge_picker1',
-		store: attributeStore1,
-		//border: false,
-		height: 210,
-		disableSelection: true,
-		columns: [
-			linkColumn1,
-			{text: "Attribute", flex: 1, dataIndex: 'attribute', sortable: false},
-			{text: "Type", flex:1, dataIndex: 'value', sortable:false},
-			{text: "Subtype", flex:1, dataIndex: 'subvalue', sortable:false},
-			{text: "Source", width: 50, dataIndex: 'source'},
-			
-		],
-		/*bbar: [
-			'->', // greedy spacer so that the buttons are aligned to each side
-			{
-				text: '<div style="visibility: hidden;"><--</div>',
-				handler: function(btn) {
-					navigate(btn.up("panel"), "prev", 4);
-				},
-				disabled: true
-			},
-			{
-				text: '<div style="visibility: hidden;"><--</div>',
-				handler: function(btn) {
-					navigate(btn.up("panel"), "next", 4);
-				},
-				disabled:true
-			}
-		],*/
-		viewConfig: {
-			getRowClass: rowClassFunc,
-		},
-		listeners: {
-				itemclick: function(t, record, item, index, event, options) {
-					console.log("itemclick")
-										
-					var selected1 = findSelected(1); //picker_grid1.getSelectionModel().selected.items;				
-					var selected2 = findSelected(2); //picker_grid2.getSelectionModel().selected.items;
-					if (selected1 && selected2) {
-						linkSources(selected1, selected2);
-					}
-										
-					card_items = [];
-					
-					global_store.each(function(storeRecord,idx){
-						card_items.push(generateCardFromDatum(storeRecord.get(selected1.data.attribute)));
-					});
-					var preview_old = Ext.getCmp("merge_preview_panel1");
-					source1_holder.remove(preview_old);
-					var merge_preview_panel = Ext.create('Ext.Panel', {
-						id: "merge_preview_panel1",
-						layout: 'card',
-						height: 50,
-						items: card_items,
-						autoscroll: true,
-		
-						bbar: [
-							'->', // greedy spacer so that the buttons are aligned to each side
-							{
-								id: 'move-prev3',
-								text: '<--',
-								handler: function(btn) {
-									navigate(btn.up("panel"), "prev", 3);
-								},
-								disabled: true
-							},
-							{
-								id: 'move-next3',
-								text: '-->',
-								handler: function(btn) {
-									navigate(btn.up("panel"), "next", 3);
-								}
-							}
-						],
-					});	
-					source1_holder.add(merge_preview_panel);	
-				}
-		}
-	});
-	
-	var picker_grid2 = Ext.create('Ext.grid.Panel', {
-		id: 'merge_picker2',
-		store: attributeStore2,
-		//border: false,
-		height: 210,
-		disableSelection: true,
-		columns: [
-			linkColumn2,
-			{text: "Attribute", flex: 1, dataIndex: 'attribute', sortable: false},
-			{text: "Type", flex:1, dataIndex: 'value', sortable:false},
-			{text: "Subtype", flex:1, dataIndex: 'subvalue', sortable:false},
-			{text: "Source", width: 50, dataIndex: 'source'},
-			
-		],
-		/*bbar: [//'->',
-				//linkButton,
-		],*/		
-		viewConfig: {
-			getRowClass: rowClassFunc, 
-		},		
-		listeners: {
-				itemclick: function(t, record, item, index, event, options) {
-					console.log("itemclick")
-					
-					var selected1 = findSelected(1); //picker_grid1.getSelectionModel().selected.items;
-					var selected2 = findSelected(2); //picker_grid2.getSelectionModel().selected.items;
-					if (selected1 && selected2) {
-						linkSources(selected1, selected2);
-					}
-										
-					card_items = [];
-					
-					global_store.each(function(storeRecord,idx){
-						card_items.push(generateCardFromDatum(storeRecord.get(selected2.data.attribute)));
-					});
-					var preview_old = Ext.getCmp("merge_preview_panel2");
-					source2_holder.remove(preview_old);
-					var merge_preview_panel = Ext.create('Ext.Panel', {
-						id: "merge_preview_panel2",
-						layout: 'card',
-						height: 50,
-						items: card_items,
-						autoscroll: true,
-		
-						bbar: [
-							'->', // greedy spacer so that the buttons are aligned to each side
-							{
-								id: 'move-prev4',
-								text: '<--',
-								handler: function(btn) {
-									navigate(btn.up("panel"), "prev", 3);
-								},
-								disabled: true
-							},
-							{
-								id: 'move-next4',
-								text: '-->',
-								handler: function(btn) {
-									navigate(btn.up("panel"), "next", 3);
-								}
-							}
-						],
-					});	
-					source2_holder.add(merge_preview_panel);		
-				}
-		}
-	});
-	
+function generateMergePanel(){
 	var merge_preview_placeholder1 = Ext.create('Ext.Panel', {
 		id: "merge_preview_panel1",
 		layout: 'card',
@@ -1561,7 +1243,7 @@ function generatePickerPanel(){
 				id: 'move-prev4',
 				text: '<--',
 				handler: function(btn) {
-					navigate(btn.up("panel"), "prev", 3);
+					navigate(btn.up("panel"), "prev", 4);
 				},
 				disabled: true
 			},
@@ -1569,12 +1251,289 @@ function generatePickerPanel(){
 				id: 'move-next4',
 				text: '-->',
 				handler: function(btn) {
-					navigate(btn.up("panel"), "next", 3);
+					navigate(btn.up("panel"), "next", 4);
 				}
 			}
 		],
 	});		
 	
+	var source1_holder = Ext.create('Ext.Panel', {
+		id: "source1_holder",
+		layout: {
+			type: 'vbox',
+			align: 'stretch',
+		},
+		flex: 2,
+		border: false,
+		defaults: {border: false},
+		items: [{html: "merge_picker1", id: "merge_picker1", height: 210}, //picker_grid1, 
+				{html: "", height: 10, border: false},
+				merge_preview_placeholder1
+				],
+	});
+	
+	var source2_holder = Ext.create('Ext.Panel', {
+		id: "source2_holder",
+		layout: {
+			type: 'vbox',
+			align: 'stretch',
+		},
+		flex: 2,
+		border: false,
+		defaults: {border: false},
+		items: [{html: "merge_picker2", id: "merge_picker2", height: 210}, //picker_grid2,
+				{html: "", height: 10, border: false},
+				merge_preview_placeholder2
+				]
+	});
+	
+	if (linkedAttributes.length == 1){
+		var s = '';
+	}
+	else{
+		var s = 's';
+	}
+	percentHTML = percentTemplate.applyTemplate({fieldsJoined: 0, s: s,
+												s1join: 0, s1total: 0,
+												s2join: 0, s2total: 0});
+	
+	var merge_report_holder = Ext.create('Ext.Panel', {
+		layout: 'fit',
+		flex: 1,
+		title: "Merge Preview",
+		defaults: {border: false},
+		items: [{html: percentHTML}],	
+	});
+
+	var merge_grids = Ext.create('Ext.Panel', {
+		id: "merge_grids",
+		layout: {
+			type: 'hbox',
+			align: 'stretch',
+		},
+		border: false,
+		defaults: {border: false},
+		flex: 1,
+		items: [
+			{html:"", width:30},
+			source1_holder,
+			{html:"", width:10},
+			source2_holder,
+			{html:"", width:10},
+			merge_report_holder,
+			{html:"", width:30},
+		],
+
+	});	
+
+	return merge_grids;
+}
+
+function updatePickerPanels(){
+	Ext.getCmp("merge_picker1").destroy();
+	Ext.getCmp("merge_picker2").destroy();
+		
+	global_store.each(function(record,idx){
+		var data_array = [];
+		for(var i=0; i<chosen_attributes1.length; i++){
+			var attribute = chosen_attributes1[i].attribute;
+			var sourceNumber = 1;
+			for(var j=0; j<linkedAttributes.length;j++){
+				//console.log("Comparing: ", linkedAttributes[j].source1, attribute);
+				if(linkedAttributes[j].source1 == attribute){
+					sourceNumber = 3;
+					chosen_attributes1[i].source = "1+2";
+					break;
+				}
+			}
+			//data_array.push({attribute: attribute, value: record.data[attribute], source:sourceNumber});
+		}
+		//card_items1.push(generateCardFromDataArray(data_array));
+	});
+		
+	global_store2.each(function(record,idx){
+		var data_array = [];
+		for(var i=0; i<chosen_attributes2.length; i++){
+			var attribute = chosen_attributes2[i].attribute;
+			var sourceNumber = 2;
+			for(var j=0; j<linkedAttributes.length;j++){
+				//console.log("Comparing: ", linkedAttributes[j].source2, attribute);
+				if(linkedAttributes[j].source2 == attribute){
+					sourceNumber = 3;
+					chosen_attributes2[i].source = "1+2";
+					break;
+				}
+			}
+			//data_array.push({attribute: attribute, value: record.data[attribute], source:sourceNumber});
+		}
+		//card_items2.push(generateCardFromDataArray(data_array));
+	});
+		
+	//console.log("Attempting to use: ", chosen_attributes1.concat(chosen_attributes2));
+	attributeStore1 = Ext.create('Ext.data.Store', {
+		model: 'DataFour',
+		data: chosen_attributes1, //.concat(chosen_attributes2),
+		autoLoad: true,
+	});
+	
+	attributeStore2 = Ext.create('Ext.data.Store', {
+		model: 'DataFour',
+		data: chosen_attributes2, //.concat(chosen_attributes2),
+		autoLoad: true,
+	});
+	
+	if (linked){
+		var linkColumn1 = {text: "Link", width: 38, dataIndex: 'attribute', renderer: renderMergeRadio1, sortable: false};
+		var linkColumn2 = {text: "Link", width: 38, dataIndex: 'attribute', renderer: renderMergeRadio2, sortable: false};
+		var linkButton = generateUnlinkButton();
+	}
+	else{
+		var linkColumn1 = {text: "Link", width: 38, dataIndex: 'attribute', renderer: renderMergeRadio1, sortable: false};
+		var linkColumn2 = {text: "Link", width: 38, dataIndex: 'attribute', renderer: renderMergeRadio2, sortable: false};
+		var linkButton = generateLinkButton();
+	}
+	
+	var checkboxModel = Ext.create('Ext.selection.CheckboxModel', {
+			checkOnly: true,
+			listeners: {
+				deselect: function(model, record, index) {
+					//id = record.get('id');
+					//alert(id);
+					var idString = record.data.source+"-checkbox-"+record.id;
+					changeDropdownById(idString, false);
+				},
+				select: function(model, record, index) {
+					//id = record.get('id');
+					//alert(id);
+					var idString = record.data.source+"-checkbox-"+record.id;
+					changeDropdownById(idString, true);
+				}
+			}
+		});
+
+	var picker_grid1 = Ext.create('Ext.grid.Panel', {
+		id: 'merge_picker1',
+		store: attributeStore1,
+		//border: false,
+		height: 210,
+		disableSelection: true,
+		columns: [
+			linkColumn1,
+			{text: "Attribute", flex: 1, dataIndex: 'attribute', sortable: false},
+			{text: "Type", flex:1, dataIndex: 'value', sortable:false},
+			{text: "Subtype", flex:1, dataIndex: 'subvalue', sortable:false},
+			{text: "Source", width: 50, dataIndex: 'source'},
+			
+		],
+		viewConfig: {
+			getRowClass: rowClassFunc,
+		},
+		listeners: {
+				itemclick: function(t, record, item, index, event, options) {
+					console.log("itemclick")
+
+					updatePreviewPanel(1, true);
+										
+					var selected1 = findSelected(1); //picker_grid1.getSelectionModel().selected.items;				
+					var selected2 = findSelected(2); //picker_grid2.getSelectionModel().selected.items;
+					if (selected1 && selected2) {
+						linkSources(selected1, selected2);
+						updatePickerPanels();
+					}
+				}
+		}
+	});
+	
+	var picker_grid2 = Ext.create('Ext.grid.Panel', {
+		id: 'merge_picker2',
+		store: attributeStore2,
+		//border: false,
+		height: 210,
+		disableSelection: true,
+		columns: [
+			linkColumn2,
+			{text: "Attribute", flex: 1, dataIndex: 'attribute', sortable: false},
+			{text: "Type", flex:1, dataIndex: 'value', sortable:false},
+			{text: "Subtype", flex:1, dataIndex: 'subvalue', sortable:false},
+			{text: "Source", width: 50, dataIndex: 'source'},
+			
+		],	
+		viewConfig: {
+			getRowClass: rowClassFunc, 
+		},		
+		listeners: {
+				itemclick: function(t, record, item, index, event, options) {
+					console.log("itemclick")
+
+					updatePreviewPanel(2, true);	
+					
+					var selected1 = findSelected(1); //picker_grid1.getSelectionModel().selected.items;
+					var selected2 = findSelected(2); //picker_grid2.getSelectionModel().selected.items;
+					if (selected1 && selected2) {
+						linkSources(selected1, selected2);
+						updatePickerPanels();
+					}
+				}
+		}
+	});
+	
+	Ext.getCmp("source1_holder").insert(0, picker_grid1);
+	Ext.getCmp("source2_holder").insert(0, picker_grid2);
+	/*
+	var merge_preview_placeholder1 = Ext.create('Ext.Panel', {
+		id: "merge_preview_panel1",
+		layout: 'card',
+		height: 50,
+		items: [],
+		autoscroll: true,
+
+		bbar: [
+			'->', // greedy spacer so that the buttons are aligned to each side
+			{
+				id: 'move-prev3',
+				text: '<--',
+				handler: function(btn) {
+					navigate(btn.up("panel"), "prev", 3);
+				},
+				disabled: true
+			},
+			{
+				id: 'move-next3',
+				text: '-->',
+				handler: function(btn) {
+					navigate(btn.up("panel"), "next", 3);
+				}
+			}
+		],
+	});
+	
+	var merge_preview_placeholder2 = Ext.create('Ext.Panel', {
+		id: "merge_preview_panel2",
+		layout: 'card',
+		height: 50,
+		items: [],
+		autoscroll: true,
+
+		bbar: [
+			'->', // greedy spacer so that the buttons are aligned to each side
+			{
+				id: 'move-prev4',
+				text: '<--',
+				handler: function(btn) {
+					navigate(btn.up("panel"), "prev", 4);
+				},
+				disabled: true
+			},
+			{
+				id: 'move-next4',
+				text: '-->',
+				handler: function(btn) {
+					navigate(btn.up("panel"), "next", 4);
+				}
+			}
+		],
+	});		
+ 	
 	var source1_holder = Ext.create('Ext.Panel', {
 		layout: {
 			type: 'vbox',
@@ -1602,11 +1561,86 @@ function generatePickerPanel(){
 				merge_preview_placeholder2
 				],
 	});
+	*/
 	
 	//DEMO STUFF -- will be replaced
 	//var percent1 = Math.ceil((100 * linkedAttributes.length) / (100 * global_keys1.length) * global_store.getCount());
 	//var percent2 = Math.ceil((100 * linkedAttributes.length) / (100 * global_keys2.length) * global_store2.getCount());
+			
+	//return merge_grids;
+};
+
+function updatePreviewPanel(sourceNumber, useData){
+	var card_items = [];
 	
+	var sourceHolder;
+	var dataStore;
+	var selected;
+	var nextNumber;
+	
+	if(sourceNumber == 1){
+		sourceHolder = Ext.getCmp("source1_holder");
+		dataStore = global_store;
+		nextNumber = 3;
+		selected = findSelected(1);
+	}
+	else{
+		sourceHolder = Ext.getCmp("source2_holder");
+		dataStore = global_store2;
+		selected = findSelected(2);
+		nextNumber = 4;
+	}
+	
+	console.log("SourceHolder: ", sourceHolder);
+	//If useData is false, we want to proceed and generate placeholders.
+	//If selected exists, we want to proceed and use whatever we found.
+	//If we do want to use data, but there's none to be used, just leave the previews as they are.
+	if (useData && !selected) {
+		console.log("Updating preview panel with nothing selected. Skipping.");
+		return;
+	}
+	
+	else {
+	 	console.log("Updating preview panel with selected: ", selected);
+		if (useData){			
+			dataStore.each(function(storeRecord,idx){
+				card_items.push(generateCardFromDatum(storeRecord.get(selected.data.attribute)));
+			});
+		}
+		var preview_old = Ext.getCmp("merge_preview_panel"+sourceNumber);
+		sourceHolder.remove(preview_old);
+		preview_old.destroy();
+		var merge_preview_panel = Ext.create('Ext.Panel', {
+			id: "merge_preview_panel"+sourceNumber,
+			layout: 'card',
+			height: 50,
+			items: card_items,
+			autoscroll: true,
+
+			bbar: [
+				'->', // greedy spacer so that the buttons are aligned to each side
+				{
+					id: 'move-prev'+nextNumber.toString(),
+					text: '<--',
+					handler: function(btn) {
+						navigate(btn.up("panel"), "prev", nextNumber);
+					},
+					disabled: true
+				},
+				{
+					id: 'move-next'+nextNumber.toString(),
+					text: '-->',
+					handler: function(btn) {
+						navigate(btn.up("panel"), "next", nextNumber);
+					}
+				}
+			],
+		});
+		sourceHolder.add(merge_preview_panel);
+	}
+}
+
+function updateMergeResults(){
 	if (linkedAttributes.length == 0) {
 		var percent1 = 0;
 		var percent2 = 0;
@@ -1625,8 +1659,7 @@ function generatePickerPanel(){
 	percentHTML = percentTemplate.applyTemplate({fieldsJoined: linkedAttributes.length, s: s,
 												s1join: percent1, s1total: global_store.getCount(),
 												s2join: percent2, s2total: global_store2.getCount()});
-	
-	
+												
 	var merge_report_holder = Ext.create('Ext.Panel', {
 		layout: 'fit',
 		flex: 1,
@@ -1635,37 +1668,6 @@ function generatePickerPanel(){
 		items: [{html: percentHTML}],	
 	});
 	
-	//console.log("merge_report_holder = ", merge_report_holder);
 	
-	var merge_grids = Ext.create('Ext.Panel', {
-		id: "merge_grids",
-		layout: {
-			type: 'hbox',
-			align: 'stretch',
-		},
-		border: false,
-		defaults: {border: false},
-		flex: 1,
-		items: [
-			{html:"", width:30},
-			source1_holder,
-			{html:"", width:10},
-			source2_holder,
-			{html:"", width:10},
-			merge_report_holder,
-			{html:"", width:30},
-		],
-
-	});	
-	
-	picker_grid1.getView().on('bodyscroll', function (event,target) {	
-		merge_preview_panel1.layout.activeItem.scrollByDeltaY(picker_grid1.getView().getEl().getScroll().top - merge_preview_panel1.layout.activeItem.getView().getEl().getScroll().top);
-	});
-	
-	picker_grid2.getView().on('bodyscroll', function (event,target) {	
-		merge_preview_panel2.layout.activeItem.scrollByDeltaY(picker_grid2.getView().getEl().getScroll().top - merge_preview_panel2.layout.activeItem.getView().getEl().getScroll().top);
-	});
-	
-	return merge_grids;
-};
+}
 

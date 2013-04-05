@@ -205,6 +205,8 @@ Ext.require('Ext.container.Viewport');
 		
     //var merge_banner = generateBannerPanel("Select Key Fields to Link the Data Sources", "Select fields that will link the two data sources together. They must be of the same type and format. The results of the linking is shown on the right.");
 	var merge_banner = {html: "<img class='centered' src='resources/images/linkData.png'/>"}
+	var merge_grids = generateMergePanel();
+	console.log("Generated: ", merge_grids);
 		
 	var merge_panel = Ext.create('Ext.Panel', {
 		layout: {
@@ -217,11 +219,15 @@ Ext.require('Ext.container.Viewport');
 				//{id: 'progress3', html: "<div class='progressPanel'><center>Data Source 1 -> Data Source 2 -> <b>Data Output</b> -> Save</center></div>", height: 50},
 				{html: "<div class='progressPanel'><img class='centered' src='resources/images/step3.png'/></div>", height: 95},
 				merge_banner,
+				merge_grids,
 				//attribute_selector,
 				//{id: 'submitRow', html: "<div style='padding:15px; font-size:15px; background-color:#DFE9F6'><center><button>Submit</input></button></div>", height: 50},
 				//submitAttributesButton,
 				]	
 	});	
+   	
+   	
+	//merge_panel.add(merge_grids);		
    	
    	
     //var attribute_banner1 = generateBannerPanel("Select Data", "Select the data fields that you want to include in your new data source.");
@@ -328,7 +334,7 @@ Ext.require('Ext.container.Viewport');
     	
     var save_form_panel =  Ext.create('Ext.form.Panel', {
 		id: "saveForm",
-		title: "Save Data Source",
+		title: "Enter Data Source Information",
 		flex: 3,
 		layout: 'anchor',
    		defaults: {
