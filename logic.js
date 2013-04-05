@@ -71,7 +71,7 @@ function fetchDropdownFromCheckboxById(checkboxID){
 
 //OLD
 //called when a checkbox changes -- makes the associated type dropdown active or inactive
-function changeDropdown(checkbox){
+function changeDropdown(checkbox, checked){
 	//WARNING: WILL FAIL IF RECORD IS NOT TWO DIGITS
 	//IMPROVEMENT: FIND THIRD-FROM-LAST '-' CHARACTER IN STRING AND SLICE FROM THERE
 	var dropDownID = checkbox.id.slice(0, 2) + "type" + checkbox.id.slice(10)
@@ -92,13 +92,17 @@ function changeDropdownById(checkboxID, checked){
 	var dropDownID = checkboxID.slice(0, 2) + "type" + checkboxID.slice(10)
 	//var dropDown = Ext.getCmp(dropDownID);
 	var dropDown = document.getElementById(dropDownID);
+	var dropDownExt = Ext.get(dropDownID);
+	dropDownExt.setVisibilityMode(Ext.Element.DISPLAY);
 	if (checked) {
 		dropDown.disabled = false;
+		dropDownExt.setVisible(true);
 	}
 	else {
 		dropDown.disabled = "disabled";
+		dropDownExt.setVisible(false);
 	}
-	changeSubtype(dropDown);
+	changeSubtype(dropDown, checked);
 }
 
 //OLD
@@ -149,7 +153,7 @@ function generateOptionsFromType(subtypeArray){
 		valueName = subtypeArray[i][0];
 		returnString += '<option value='+valueName+'>'+displayName+'</option>'
 	}
-	console.log("Generated options string: ", returnString);
+	//console.log("Generated options string: ", returnString);
 	return returnString;
 }
 
@@ -201,7 +205,7 @@ function fetchSubtypeFromTypeDropDown(dropdown){
 }
 
 //called whenever a type dropdown changes -- makes the appropriate subtype dropdown visible
-function changeSubtype(dropdown){
+function changeSubtype(dropdown, checked){
 	var chosen_subtype = dropdown.value;
 	
 	/*
@@ -230,18 +234,20 @@ function changeSubtype(dropdown){
 		match = (chosen_subtype == subtype);
 		//console.log("Currently working on: ", subtype, "matches value? ", match);
 		subdropdown.setVisibilityMode(Ext.Element.DISPLAY);
-		subdropdown.setVisible(match);		
+	
 
 		//var dropdownDOM = document.getElementById(idHeader+subtype+idFooter) 
 		//dropdownDOM.disabled = match;
 		
-		if (match){
+		if (match && checked){
 			//dropdown.show();
 			subdropdown.dom.removeAttribute('disabled');
+			subdropdown.setVisible(true);	
 		}
 		else {
 			//dropdown.hide();
 			subdropdown.dom.setAttribute('disabled', 'disabled');
+			subdropdown.setVisible(false);	
 		}
 		
 		//dropdownDOM.
@@ -272,7 +278,7 @@ function changeSubtype(dropdown){
  //render functions for grids	
 function renderDropdown(value, p, record){
    		var idString = record.data.source+"-type-" + record.id;
-   		return '<select attribute="'+value+'" id="'+idString+'" name="'+value+'" onchange="changeSubtype(this);" disabled="disabled">'+typeOptions+'</select>';
+   		return '<select style="display: none" attribute="'+value+'" id="'+idString+'" name="'+value+'" onchange="changeSubtype(this, true);" disabled="disabled">'+typeOptions+'</select>';
    	};
 
 function renderSubtype(value, p, record){
@@ -298,6 +304,29 @@ var percentMarkup = [
    		'</div>',
    	];
 var percentTemplate = Ext.create('Ext.Template', percentMarkup);
+
+var reverseStep = function(stepNumber){
+	console.log("reverseStep called with number: ", stepNumber);
+	//DON'T DO THIS HERE!!!
+	//INSTEAD, WHEN REMOVE BUTTON IS CLICKED, THAT'S WHEN YOU DESTROY THE FIELD PICKER GRID!!!!
+	/*
+	if (stepNumber == 1 || stepNumber == 3){
+		if (stepNumber == 1){
+			var last_item = source_attribute1.items.items.pop();
+			last_item.destroy();
+			disableButton("next", false);
+		}
+		if (stepNumber == 3){
+			var last_item = source_attribute2.items.items.pop();
+			last_item.destroy();
+			disableButton("next", false);
+		}
+	}
+	else if (stepNumber == 4) {
+	
+	}
+	*/
+}
 
 //called whenever the "next" button is clicked
 //handles UI setup, remote calls and data storage
@@ -423,6 +452,17 @@ var executeStep = function(stepNumber){
 				{text: "Type", flex:1, dataIndex: 'name', renderer: renderDropdown, sortable:false},
 				{text: "Subtype", flex:1, dataIndex: 'name', renderer: renderSubtype, sortable:false},
 			],
+			
+			listeners: {
+				selectionchange: function(trigger, record, index) {
+					if(record.length>0) {
+						disableButton("next", false);
+					}
+					else {
+						disableButton("next", true);
+					}
+				}
+			}
 			/*
 			bbar: [
 				{
@@ -473,31 +513,33 @@ var executeStep = function(stepNumber){
 		});
 		
 		 source_attribute.add(source);	
-		 
+		 disableButton("next", true);
 		 
 	}
 	//Steps #2 and #4 are after the user has finished with an Attribute Selection screen. 
 	//It stores their specification, generates the IDL and sends it off.
 	else if (stepNumber == 2 || stepNumber == 4){
 		if (stepNumber == 2){
+			chosen_attributes1 = [];
 			var source = 1;
 			var chosen_attributes = chosen_attributes1;
 			var source_uri = sourceURL1;
 			var idlID = 'idlID1';
 		}
 		else {
+			chosen_attributes2 = [];
 			var source = 2;
 			var chosen_attributes = chosen_attributes2;
 			var source_uri = sourceURL2;
 			var idlID = 'idlID2';
 		}
-		//console.log("Storing selected fields and field types");
+		console.log("Storing selected fields and field types");
 		//var checkboxList = Ext.query('*[id^='+source+'-checkbox]');
 		var picker_grid = Ext.getCmp('picker_grid'+source);
 		var checkboxList = picker_grid.getSelectionModel().getSelection();
 		
 		var typeList = Ext.query('*[id^='+source+'-type]');
-		//console.log("Found checkboxes: ", checkboxList.length);
+		console.log("Found checkboxes: ", checkboxList.length);
 		//console.log("Found types: ", typeList.length);
 		
 		var idlJSON = prepareIDLjson(source_uri); 
@@ -512,7 +554,8 @@ var executeStep = function(stepNumber){
 				subdropdown = fetchSubtypeFromTypeDropDown(dropdown);
 				console.log("Found subdropdown: ", subdropdown);
 				
-				chosen_attributes.push({"attribute": dropdown.value, "value": subdropdown.dom.value, "source": source});
+				chosen_attributes.push({"attribute": checkbox.data.name, "value": dropdown.value, "subvalue": subdropdown.dom.value, "source": source});
+				console.log("chosen_attributes is now: ", chosen_attributes);
 				
 				console.log("dropdown.value = ", dropdown.value);
 				console.log("subdropdown.value = ", subdropdown.dom.value);
@@ -573,6 +616,16 @@ var executeStep = function(stepNumber){
 		});
 		
 		if (stepNumber == 4) {
+			var merge_grids_old = Ext.getCmp("merge_grids");
+			console.log("merge_grids_old is: ", merge_grids_old);
+	
+			if(merge_grids_old){
+				console.log("Destroying old merge grids!");
+				merge_panel.remove(merge_grids_old, true);
+				merge_grids_old.destroy();
+			}
+			linkedAttributes = [];
+			linked = false;
 		
 			//generates the panel that holds the merge sources UI
 			var merge_grids = generatePickerPanel();
@@ -813,6 +866,31 @@ function generateBannerPanel(title, text){
 	return banner_panel;
 }
 
+function generateCardFromDatum(input){
+	//console.log("Building card with input: ", input);
+	var temp_store = Ext.create('Ext.data.Store', {
+		fields: ["datum"],
+		data: {'items': [{"datum": input}]},
+		proxy: {
+			type: 'memory',
+			reader: {
+				type: 'json',
+				root: 'items'
+			}
+		}
+	});
+	//console.log("Built store: ", temp_store);
+	var data_grid = Ext.create('Ext.grid.Panel', {
+		store: temp_store,
+		hideHeaders: true,
+		height: 28,
+		columns: [
+			{text: "", flex:1, dataIndex: 'datum', sortable: false}
+		],	
+	});
+	return data_grid;
+}
+
 function generateCardFromDataArray(data_array){
 	var temp_store = Ext.create('Ext.data.Store', {
 		model: 'DataTrio',
@@ -851,6 +929,89 @@ function generateCardFromDataPairArray(data_array){
 	return data_grid;
 }
 
+function linkSources(record1, record2) {
+		console.log("record1 and record2 are: ", record1, record2);
+		if (linked) {
+			for(var i=0; i<chosen_attributes1.length; i++){
+				chosen_attributes1[i].source = "1";
+			}
+			for(var i=0; i<chosen_attributes2.length; i++){
+				chosen_attributes2[i].source = "2";
+			}
+			linkedAttributes = []
+		}
+		
+		linkedAttributes.push({source1: record1.data.attribute, source2: record2.data.attribute});
+		linked = true;
+		//console.log("LinkedAttributes is now: ", linkedAttributes);
+	
+		//console.log("merge_panel is: ", merge_panel);
+		var merge_grids_old = Ext.getCmp("merge_grids");
+		//console.log("merge_grids is: ", merge_grids_old);
+	
+		merge_panel.remove(merge_grids_old, true);
+	
+		merge_grids_new = generatePickerPanel();
+	
+		merge_grids_new.doLayout();
+	
+		merge_panel.add(merge_grids_new);
+							
+		merge_panel.doLayout();
+		
+		//Ext.getCmp("main_next").setDisabled(false);
+		//Ext.getCmp("main_next").setSrc("resources/images/button_next.png");
+		disableButton("next", false);
+}
+
+function findSelected(source){
+	console.log("Entered findSelected!");
+	var radioList = Ext.query('*[id^='+source+'-merge-radio]');
+		var radio;
+		for (var i=0; i<radioList.length; i++){
+			if (radioList[i].checked){
+				radio = radioList[i];
+			}
+		}
+		if (radio) {
+			console.log("Found radio: ", radio);
+		}
+		else {
+			console.log("Source ", source, " not found.");
+			return null;
+		}
+		
+		var id = radio.id.substr(radio.id.lastIndexOf('-')-19);
+		console.log("id: ", id);
+		var returnValue = null;
+		if (source==1){		
+			attributeStore1.each(function(record,idx){
+				//console.log(Object.prototype.toString.call(id), " vs. ", Object.prototype.toString.call(record.id));
+				if(record.id == id){
+					console.log("Found match! Record is: ", record);
+					returnValue = record;
+					//break;
+					//console.log("At least this never fires.");
+				}
+			});
+			console.log("Returning: ", returnValue);
+			return returnValue;
+		}
+		else {
+			attributeStore2.each(function(record,idx){
+				if(record.id == id){
+					console.log("Found match! Record is: ", record);
+					returnValue = record;
+					//break;
+					//console.log("At least this never fires.");
+				}
+			});
+			console.log("Returning: ", returnValue);
+			return returnValue;
+		}
+		return returnValue;
+}
+
 function generateLinkButton(){
 	return { id: 'linkButton',
 	text: 'Link',
@@ -873,7 +1034,7 @@ function generateLinkButton(){
 				//break;	
 			}
 		});						
-		//console.log("record1 is: ", record1);
+		console.log("record1 is: ", record1);
 	
 		var radioList2 = Ext.query('*[id^=2-merge-radio]');
 		var radio2;
@@ -882,12 +1043,12 @@ function generateLinkButton(){
 				radio2 = radioList2[i];
 			}
 		}
-		/*
+		
 		console.log("Fetched: ", radio1, radio2);
 		console.log("id is: ", radio1.id);
 		console.log("last position of - is: ", radio1.id.lastIndexOf('-'));
 		console.log("just id # is: ", radio1.id.substr(radio1.id.lastIndexOf('-')-19));
-		*/
+		
 		var id2 = radio2.id.substr(radio2.id.lastIndexOf('-')-19);
 		var record2;
 		
@@ -899,7 +1060,7 @@ function generateLinkButton(){
 			}
 		});
 								
-		//console.log("record2 is: ", record2);
+		console.log("record2 is: ", record2);
 	
 		linkedAttributes.push({source1: record1.data.attribute, source2: record2.data.attribute});
 		linked = true;
@@ -969,16 +1130,38 @@ function renderMergeCheckbox(value, meta, record, rowIndex){
    		//return '<input type="checkbox" class="'+rowClass+'" attribute="'+value+'" id="'+idString+'" name="'+idString+'"/>';   	
    	};
    	
-function renderMergeRadio(value, meta, record){
+function renderMergeRadio1(value, meta, record){
+	return renderMergeRadio(value, meta, record, "1");
+}	
+
+function renderMergeRadio2(value, meta, record){
+	return renderMergeRadio(value, meta, record, "2");
+}	   
+   
+function renderMergeRadio(value, meta, record, source){
 		//console.log(value);
 		//console.log(meta);
 		//console.log(record);
 		//console.log("--------");
-		if (record.data.source == "1+2"){
+		/*if (record.data.source == "1+2"){
 			return "";
+		}*/
+		var selected = "";
+		
+		/*
+		//For whatever reason, radio buttons "checked" in this manner don't count.
+		if (linkedAttributes.length > 0){
+			//console.log("record.data.attribute is: ", record.data.attribute);
+			//console.log("seeking attribute: ", linkedAttributes[0]["source"+source]);
+		
+			if (record.data.attribute == linkedAttributes[0]["source"+source]){
+				selected = "checked='checked' ";
+			}
 		}
+		*/
+		
    		var idString = record.data.source+"-merge-radio-"+record.id;
-   		return '<input type="radio" name="source'+record.data.source+'" value="'+value+'" id="'+idString+'"/>'; 
+   		return '<input type="radio" name="source'+source+'" value="'+value+'" id="'+idString+'" '+selected+' />'; 
    	};
 
 //sometimes you just don't want to render anything.   	
@@ -986,12 +1169,9 @@ function renderNothing(value, meta, record){
 	return '';
 }
    	
-function renderMergeSubtype(value){
- 	return 'N/A';  
-};
-
 function rowClassFunc(record, index){
 	var s = record.get('source');
+	//console.log("Source = ", s);
 	if (s == 1) {
 		if (index % 2 == 0) {
 			return 'source1Row-Even';
@@ -1049,7 +1229,7 @@ function generatePickerPanel(){
 			}
 		}
 	*/
-	/*
+	
 	global_store.each(function(record,idx){
 		var data_array = [];
 		for(var i=0; i<chosen_attributes1.length; i++){
@@ -1063,9 +1243,9 @@ function generatePickerPanel(){
 					break;
 				}
 			}
-			data_array.push({attribute: attribute, value: record.data[attribute], source:sourceNumber});
+			//data_array.push({attribute: attribute, value: record.data[attribute], source:sourceNumber});
 		}
-		card_items1.push(generateCardFromDataArray(data_array));
+		//card_items1.push(generateCardFromDataArray(data_array));
 	});
 		
 	global_store2.each(function(record,idx){
@@ -1081,11 +1261,11 @@ function generatePickerPanel(){
 					break;
 				}
 			}
-			data_array.push({attribute: attribute, value: record.data[attribute], source:sourceNumber});
+			//data_array.push({attribute: attribute, value: record.data[attribute], source:sourceNumber});
 		}
-		card_items2.push(generateCardFromDataArray(data_array));
+		//card_items2.push(generateCardFromDataArray(data_array));
 	});
-	*/
+	
 	/*
 	var merge_preview_panel1 = Ext.create('Ext.Panel', {
 		id: "merge_preview_panel1",
@@ -1148,40 +1328,64 @@ function generatePickerPanel(){
 	
 	//console.log("Attempting to use: ", chosen_attributes1.concat(chosen_attributes2));
 	attributeStore1 = Ext.create('Ext.data.Store', {
-		model: 'DataTrio',
+		model: 'DataFour',
 		data: chosen_attributes1, //.concat(chosen_attributes2),
 		autoLoad: true,
 	});
 	
 	attributeStore2 = Ext.create('Ext.data.Store', {
-		model: 'DataTrio',
+		model: 'DataFour',
 		data: chosen_attributes2, //.concat(chosen_attributes2),
 		autoLoad: true,
 	});
 	
+	console.log("chosen_attributes1 = ", chosen_attributes1);
+	console.log("attribute_store1 = ", attributeStore1);
+	
 	if (linked){
-		var linkColumn = {text: "Link", width: 38, dataIndex: 'source', renderer: renderNothing, sortable: false};
+		var linkColumn1 = {text: "Link", width: 38, dataIndex: 'attribute', renderer: renderMergeRadio1, sortable: false};
+		var linkColumn2 = {text: "Link", width: 38, dataIndex: 'attribute', renderer: renderMergeRadio2, sortable: false};
 		var linkButton = generateUnlinkButton();
 	}
 	else{
-		var linkColumn = {text: "Link", width: 38, dataIndex: 'source', renderer: renderMergeRadio, sortable: false};
+		var linkColumn1 = {text: "Link", width: 38, dataIndex: 'attribute', renderer: renderMergeRadio1, sortable: false};
+		var linkColumn2 = {text: "Link", width: 38, dataIndex: 'attribute', renderer: renderMergeRadio2, sortable: false};
 		var linkButton = generateLinkButton();
 	}
+	
+	var checkboxModel = Ext.create('Ext.selection.CheckboxModel', {
+			checkOnly: true,
+			listeners: {
+				deselect: function(model, record, index) {
+					//id = record.get('id');
+					//alert(id);
+					var idString = record.data.source+"-checkbox-"+record.id;
+					changeDropdownById(idString, false);
+				},
+				select: function(model, record, index) {
+					//id = record.get('id');
+					//alert(id);
+					var idString = record.data.source+"-checkbox-"+record.id;
+					changeDropdownById(idString, true);
+				}
+			}
+		});
 	
 	var picker_grid1 = Ext.create('Ext.grid.Panel', {
 		id: 'merge_picker1',
 		store: attributeStore1,
 		//border: false,
-		flex: 2,
+		height: 210,
+		disableSelection: true,
 		columns: [
-			linkColumn,
+			linkColumn1,
 			{text: "Attribute", flex: 1, dataIndex: 'attribute', sortable: false},
 			{text: "Type", flex:1, dataIndex: 'value', sortable:false},
-			{text: "Subtype", flex:1, dataIndex: 'value', renderer: renderMergeSubtype, sortable:false},
+			{text: "Subtype", flex:1, dataIndex: 'subvalue', sortable:false},
 			{text: "Source", width: 50, dataIndex: 'source'},
 			
 		],
-		bbar: [
+		/*bbar: [
 			'->', // greedy spacer so that the buttons are aligned to each side
 			{
 				text: '<div style="visibility: hidden;"><--</div>',
@@ -1197,16 +1401,54 @@ function generatePickerPanel(){
 				},
 				disabled:true
 			}
-		],	
+		],*/
 		viewConfig: {
 			getRowClass: rowClassFunc,
 		},
 		listeners: {
-				selectionchange: function(t, record, index) {
-					console.log("Selection has changed: ", record);
-					//generate the preview object
-					//destroy the old one
-					//add the new one in its place
+				itemclick: function(t, record, item, index, event, options) {
+					console.log("itemclick")
+										
+					var selected1 = findSelected(1); //picker_grid1.getSelectionModel().selected.items;				
+					var selected2 = findSelected(2); //picker_grid2.getSelectionModel().selected.items;
+					if (selected1 && selected2) {
+						linkSources(selected1, selected2);
+					}
+										
+					card_items = [];
+					
+					global_store.each(function(storeRecord,idx){
+						card_items.push(generateCardFromDatum(storeRecord.get(selected1.data.attribute)));
+					});
+					var preview_old = Ext.getCmp("merge_preview_panel1");
+					source1_holder.remove(preview_old);
+					var merge_preview_panel = Ext.create('Ext.Panel', {
+						id: "merge_preview_panel1",
+						layout: 'card',
+						height: 50,
+						items: card_items,
+						autoscroll: true,
+		
+						bbar: [
+							'->', // greedy spacer so that the buttons are aligned to each side
+							{
+								id: 'move-prev3',
+								text: '<--',
+								handler: function(btn) {
+									navigate(btn.up("panel"), "prev", 3);
+								},
+								disabled: true
+							},
+							{
+								id: 'move-next3',
+								text: '-->',
+								handler: function(btn) {
+									navigate(btn.up("panel"), "next", 3);
+								}
+							}
+						],
+					});	
+					source1_holder.add(merge_preview_panel);	
 				}
 		}
 	});
@@ -1215,34 +1457,136 @@ function generatePickerPanel(){
 		id: 'merge_picker2',
 		store: attributeStore2,
 		//border: false,
-		flex: 2,
+		height: 210,
+		disableSelection: true,
 		columns: [
-			linkColumn,
+			linkColumn2,
 			{text: "Attribute", flex: 1, dataIndex: 'attribute', sortable: false},
 			{text: "Type", flex:1, dataIndex: 'value', sortable:false},
-			{text: "Subtype", flex:1, dataIndex: 'value', renderer: renderMergeSubtype, sortable:false},
+			{text: "Subtype", flex:1, dataIndex: 'subvalue', sortable:false},
 			{text: "Source", width: 50, dataIndex: 'source'},
 			
 		],
-		bbar: [//'->',
-				linkButton,
-		],		
+		/*bbar: [//'->',
+				//linkButton,
+		],*/		
 		viewConfig: {
 			getRowClass: rowClassFunc, 
-		}		
+		},		
+		listeners: {
+				itemclick: function(t, record, item, index, event, options) {
+					console.log("itemclick")
+					
+					var selected1 = findSelected(1); //picker_grid1.getSelectionModel().selected.items;
+					var selected2 = findSelected(2); //picker_grid2.getSelectionModel().selected.items;
+					if (selected1 && selected2) {
+						linkSources(selected1, selected2);
+					}
+										
+					card_items = [];
+					
+					global_store.each(function(storeRecord,idx){
+						card_items.push(generateCardFromDatum(storeRecord.get(selected2.data.attribute)));
+					});
+					var preview_old = Ext.getCmp("merge_preview_panel2");
+					source2_holder.remove(preview_old);
+					var merge_preview_panel = Ext.create('Ext.Panel', {
+						id: "merge_preview_panel2",
+						layout: 'card',
+						height: 50,
+						items: card_items,
+						autoscroll: true,
+		
+						bbar: [
+							'->', // greedy spacer so that the buttons are aligned to each side
+							{
+								id: 'move-prev4',
+								text: '<--',
+								handler: function(btn) {
+									navigate(btn.up("panel"), "prev", 3);
+								},
+								disabled: true
+							},
+							{
+								id: 'move-next4',
+								text: '-->',
+								handler: function(btn) {
+									navigate(btn.up("panel"), "next", 3);
+								}
+							}
+						],
+					});	
+					source2_holder.add(merge_preview_panel);		
+				}
+		}
 	});
+	
+	var merge_preview_placeholder1 = Ext.create('Ext.Panel', {
+		id: "merge_preview_panel1",
+		layout: 'card',
+		height: 50,
+		items: [],
+		autoscroll: true,
+
+		bbar: [
+			'->', // greedy spacer so that the buttons are aligned to each side
+			{
+				id: 'move-prev3',
+				text: '<--',
+				handler: function(btn) {
+					navigate(btn.up("panel"), "prev", 3);
+				},
+				disabled: true
+			},
+			{
+				id: 'move-next3',
+				text: '-->',
+				handler: function(btn) {
+					navigate(btn.up("panel"), "next", 3);
+				}
+			}
+		],
+	});
+	
+	var merge_preview_placeholder2 = Ext.create('Ext.Panel', {
+		id: "merge_preview_panel2",
+		layout: 'card',
+		height: 50,
+		items: [],
+		autoscroll: true,
+
+		bbar: [
+			'->', // greedy spacer so that the buttons are aligned to each side
+			{
+				id: 'move-prev4',
+				text: '<--',
+				handler: function(btn) {
+					navigate(btn.up("panel"), "prev", 3);
+				},
+				disabled: true
+			},
+			{
+				id: 'move-next4',
+				text: '-->',
+				handler: function(btn) {
+					navigate(btn.up("panel"), "next", 3);
+				}
+			}
+		],
+	});		
 	
 	var source1_holder = Ext.create('Ext.Panel', {
 		layout: {
 			type: 'vbox',
 			align: 'stretch',
 		},
-		flex: 1,
+		flex: 2,
 		border: false,
 		defaults: {border: false},
-		items: [picker_grid1] 
-				//{html: "", height: 10, border: false},
-				//picker_grid2],
+		items: [picker_grid1, 
+				{html: "", height: 10, border: false},
+				merge_preview_placeholder1
+				],
 	});
 	
 	var source2_holder = Ext.create('Ext.Panel', {
@@ -1250,12 +1594,13 @@ function generatePickerPanel(){
 			type: 'vbox',
 			align: 'stretch',
 		},
-		flex: 1,
+		flex: 2,
 		border: false,
 		defaults: {border: false},
-		items: [picker_grid2]
-				//{html: "", height: 10, border: false},
-				//merge_preview_panel2],
+		items: [picker_grid2,
+				{html: "", height: 10, border: false},
+				merge_preview_placeholder2
+				],
 	});
 	
 	//DEMO STUFF -- will be replaced
@@ -1267,8 +1612,8 @@ function generatePickerPanel(){
 		var percent2 = 0;
 	}
 	else {
-		var percent1 = 4;
-		var percent2 = 4;
+		var percent1 = 0;
+		var percent2 = 0;
 	}
 	
 	if (linkedAttributes.length == 1){
@@ -1306,7 +1651,7 @@ function generatePickerPanel(){
 			source1_holder,
 			{html:"", width:10},
 			source2_holder,
-			//{html:"", width:10},
+			{html:"", width:10},
 			merge_report_holder,
 			{html:"", width:30},
 		],

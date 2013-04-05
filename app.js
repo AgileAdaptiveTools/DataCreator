@@ -14,6 +14,10 @@ Ext.require('Ext.container.Viewport');
        extend: 'Ext.data.Model',
        fields: ['name', 'url'],
    });
+   Ext.define('Datum',{
+        extend: 'Ext.data.Model',
+        fields: ['datum']
+    });
 	Ext.define('DataPair',{
         extend: 'Ext.data.Model',
         fields: ['attribute', 'value']
@@ -22,7 +26,7 @@ Ext.require('Ext.container.Viewport');
         extend: 'Ext.data.Model',
         fields: ['attribute', 'value', 'source']
     });
-    Ext.define('DataQuart',{
+    Ext.define('DataFour',{
         extend: 'Ext.data.Model',
         fields: ['attribute', 'value', 'subvalue', 'source']
     });
@@ -211,7 +215,7 @@ Ext.require('Ext.container.Viewport');
 		defaults: {border: false},
 		items: [
 				//{id: 'progress3', html: "<div class='progressPanel'><center>Data Source 1 -> Data Source 2 -> <b>Data Output</b> -> Save</center></div>", height: 50},
-				{html: "<div class='progressPanel'><img class='centered' src='resources/images/step3.png'/></div>", height: 115},
+				{html: "<div class='progressPanel'><img class='centered' src='resources/images/step3.png'/></div>", height: 95},
 				merge_banner,
 				//attribute_selector,
 				//{id: 'submitRow', html: "<div style='padding:15px; font-size:15px; background-color:#DFE9F6'><center><button>Submit</input></button></div>", height: 50},
@@ -231,7 +235,7 @@ Ext.require('Ext.container.Viewport');
 		border: false,
 		defaults: {border: false},
 		items: [
-				{html: "<div class='progressPanel'><img class='centered' src='resources/images/step1b.png'/></div>", height: 115},
+				{html: "<div class='progressPanel'><img class='centered' src='resources/images/step1b.png'/></div>", height: 95},
 				//{html: "<div class='progressPanel'><center><b>Data Source 1</b> -> Data Source 2 -> Data Output -> Save</center></div>", height: 50},
 				 attribute_banner1,
 				]	
@@ -250,7 +254,7 @@ Ext.require('Ext.container.Viewport');
 		defaults: {border: false},
 		items: [
 				//{html: "<div class='progressPanel'><center>Data Source 1 -> <b>Data Source 2</b> -> Data Output -> Save</center></div>", height: 50},
-				{html: "<div class='progressPanel'><img class='centered' src='resources/images/step2b.png'/></div>", height: 115},
+				{html: "<div class='progressPanel'><img class='centered' src='resources/images/step2b.png'/></div>", height: 95},
 				attribute_banner2,
 				]	
 	});
@@ -324,7 +328,8 @@ Ext.require('Ext.container.Viewport');
     	
     var save_form_panel =  Ext.create('Ext.form.Panel', {
 		id: "saveForm",
-		flex: 1,
+		title: "Save Data Source",
+		flex: 3,
 		layout: 'anchor',
    		defaults: {
         	anchor: '90%',
@@ -391,7 +396,7 @@ Ext.require('Ext.container.Viewport');
 	var save_preview_panel =  Ext.create('Ext.Panel', {
 		id: "savePreview",
 		layout: 'fit',
-		flex: 1,
+		flex: 3,
 		border: false,
 		items: [
 		],
@@ -406,11 +411,11 @@ Ext.require('Ext.container.Viewport');
     		align: "stretch",
     	},
     	items: [
-    			{html: "", width: 30, border: false},
+    			{html: "", flex:1, border: false},
     			save_form_panel, 
-    			{html: "", width:20, border: false}, 
-    			save_preview_panel,
-    			{html: "", width: 30, border: false},
+    			//{html: "", width:20, border: false}, 
+    			//save_preview_panel,
+    			{html: "", flex:1, border: false},
     		],
     });
 		
@@ -425,7 +430,7 @@ Ext.require('Ext.container.Viewport');
 		border: false,
 		items: [
 			//{id: 'progress5', html: "<div class='progressPanel'><center>Data Source 1 -> Data Source 2 -> <b>Data Output</b> -> Save</center></div>", height: 50},   
-			{html: "<div class='progressPanel'><img class='centered' src='resources/images/step4.png'/></div>", height: 115},
+			{html: "<div class='progressPanel'><img class='centered' src='resources/images/step4.png'/></div>", height: 95},
 			result_banner,
 			save_panel,
 		]
@@ -462,6 +467,7 @@ Ext.require('Ext.container.Viewport');
 		else{
 			//Ext.getCmp("main_next").setDisabled(false); 
 			disableButton("next", false);
+			reverseStep(stepNumber);
 		}
    	}
     
@@ -474,8 +480,8 @@ Ext.require('Ext.container.Viewport');
 		listeners: {
 			el: {
 				click: function() {
-    				step--;
 					main_navigate("prev", step);
+					step--;
 				}	
 			}
     	}
@@ -611,7 +617,7 @@ Ext.require('Ext.container.Viewport');
 		title: 'John Hancock',
 		layout: 'fit',
 		width: 150,
-		height: 625,
+		height: 490,
 		store: tree_store,
 		rootVisible: false,
 		//border: false,
@@ -664,3 +670,5 @@ Ext.application({
 
 var source = new SourceManager('www.google.com', true);
 source.display(); 
+
+main_panel.doLayout();

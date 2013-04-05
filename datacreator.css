@@ -83,27 +83,29 @@ img.centered {
 }
 
 .x-grid-row.source1Row-Even .x-grid-cell{
-	background-color:#BFB;
+	background-color:#BBF;
+	border-color: #BBB;
 }
 
 .x-grid-row.source1Row-Odd .x-grid-cell{
-	background-color:#DFD;
+	background-color:#AAF;
+    border-color: #AAF;
 }
 
 .x-grid-row.source2Row-Even .x-grid-cell{
-	background-color:#FBB;
+	background-color:#FF9;
 }
 
 .x-grid-row.source2Row-Odd .x-grid-cell{
-	background-color:#FDD;
+	background-color:#FFD;
 }
 
 .x-grid-row.sourceBothRow-Even .x-grid-cell{
-	background-color:#FFB;
+	background-color:#BFB;
 }
 
 .x-grid-row.sourceBothRow-Odd .x-grid-cell{
-	background-color:#FFD;
+	background-color:#DFD;
 }
 
 /*

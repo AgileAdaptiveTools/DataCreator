@@ -96,6 +96,11 @@ function generateSourceSelector(sourceNumber){
 				emptyText: 'Select a CSV file',
 				name: 'inputFile',
 				buttonText: 'Browse',
+				listeners: {
+					change: function(t, fileLocation) {
+						console.log("file changed!");
+					}
+				}
 
 			}],
 	
@@ -154,10 +159,22 @@ function generateSourceSelector(sourceNumber){
 			label: "Web Address",
 			hideLabel: 'true',
 			//height: 40,
-			width: 280,
+			//width: 280,
 		}),
       ],
-      buttons: [urlButton]
+      buttons: [urlButton],
+      listeners: {
+      	boxready: function(t, width, height) {
+      		var textField = Ext.get('urlInput'+sourceNumber);
+      		var firstWidth = t.getWidth();
+      		textField.setWidth(firstWidth - 30);
+      	},
+      	resize: function(t, width, height, oldWidth, oldHeight, eOpts ) {
+      		var textField = Ext.get('urlInput'+sourceNumber);
+      		textFieldOldWidth = textField.getWidth();
+      		textField.setWidth(textFieldOldWidth + (width - oldWidth));
+      	}
+      }
    });
     
     var urlPanel = Ext.create('Ext.Panel', {
@@ -186,7 +203,7 @@ function generateSourceSelector(sourceNumber){
     		align: 'stretch',
     	},
     	border: false,
-    	flex: 6,
+    	height: 240,
     	defaults: {
     		cls: 'round-corners'
     	},
@@ -201,6 +218,7 @@ function generateSourceSelector(sourceNumber){
 		
     	],
     });
+    
     
     var removeButtonPanel = generateSourceRemoveButtonPanel(sourceNumber);
     //console.log("RemoveButtonPanel = ", removeButtonPanel);
@@ -218,17 +236,17 @@ function generateSourceSelector(sourceNumber){
     });
     
 	var source_continue = Ext.create('Ext.Panel', { 
-		//id: 'continue'+sourceNumber,
+		id: 'source_continue'+sourceNumber,
 		border: false,
 		//title: "Source Information",
-		flex: 5,
+		height:240,
 		layout: "hbox",
 		items: [{html: "", border: false, flex:1},
 				source_info,
 				{html: "", border: false, flex:1}],
 	});
 	//console.log("sourceInfo: ", Ext.getCmp("sourceInfo"+sourceNumber));
-	Ext.getCmp("sourceInfo"+sourceNumber).hide();
+	Ext.getCmp("source_continue"+sourceNumber).hide();
     
     
     var numberWord;
@@ -256,12 +274,11 @@ function generateSourceSelector(sourceNumber){
 		border: false,
 		items: [
 				//{id: 'progress1', html: "<div class='progressPanel'><center><b>Data Source 1</b> -> Data Source 2 -> Data Output -> Save</center></div>", height: 50},     
-				{html: "<div class='progressPanel'><img class='centered' src='resources/images/step"+sourceNumber+"a.png'/></div>", height: 115},
+				{html: "<div class='progressPanel'><img class='centered' src='resources/images/step"+sourceNumber+"a.png'/></div>", height: 95},
 				//{html: "<hr width='95%'/>", height: 20},
-				{html: "", height: 10},
 				source_banner,
 				source_choice, 
-				{html: "", height: 15},
+				//{html: "", height: 15},
 				//{html: "<hr style='vertical-align:middle;' width='85%'/>", height: 10},
 				//{html: "", height: 15},
 				source_continue,
@@ -269,7 +286,6 @@ function generateSourceSelector(sourceNumber){
 				//source_remove_button_panel,
 				],
 	});
-		
 	return source_selector;
 };
 
@@ -287,7 +303,7 @@ var check = Ext.create('Ext.panel.Panel', {
 */
 
 var executeRemoveButton = function(sourceNum){
-	blankTemplate.overwrite("continue"+sourceNum, {});
+	//blankTemplate.overwrite("continue"+sourceNum, {});
 	Ext.getCmp("source_choice"+sourceNum).show();
 	//Ext.getCmp('add_button_panel'+sourceNum).show();
 	//Ext.getCmp('remove_button_panel'+sourceNum).hide();
@@ -295,7 +311,22 @@ var executeRemoveButton = function(sourceNum){
 	//Ext.getCmp("main_next").setSrc("resources/images/button_next_disabled.png");
 	disableButton("next", true);
 	//check.hide();
-	Ext.getCmp("sourceInfo"+sourceNum).hide();
+	if (sourceNum == 1){
+			var last_item = source_attribute1.items.items.pop();
+			console.log("Destroying: ", last_item);
+			last_item.destroy();
+			disableButton("next", false);
+	}
+	if (sourceNum == 2){
+			var last_item = source_attribute2.items.items.pop();
+			console.log("Destroying: ", last_item);
+			last_item.destroy();
+			disableButton("next", false);
+	}
+	
+	
+	
+	Ext.getCmp("source_continue"+sourceNum).hide();
 }
 
 
@@ -406,7 +437,7 @@ var executeAddButton = function(sourceNum){
 						//urlPanel = Ext.get('urlPanel'+sourceNum);
 						//check.show();
 						//check.alignTo(urlPanel, "c-c");
-						Ext.getCmp("sourceInfo"+sourceNum).show();
+						Ext.getCmp("source_continue"+sourceNum).show();
 						
 						
 					}	
